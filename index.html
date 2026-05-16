@@ -501,40 +501,6 @@ ${data.tong}
 }
 
 // ===================
-// HISTORY
-// ===================
-
-function renderHistory(){
-
-  let html = "";
-
-  historyData
-  .slice()
-  .reverse()
-  .forEach(item=>{
-
-    html += `
-
-    <div class="
-    item ${item}">
-
-    ${item==="tai"
-    ? "T"
-    : "X"}
-
-    </div>
-
-    `;
-
-  });
-
-  document
-  .getElementById("history")
-  .innerHTML =
-  html;
-}
-
-// ===================
 // AI
 // ===================
 
