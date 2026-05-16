@@ -5,7 +5,7 @@
 <meta name="viewport"
 content="width=device-width, initial-scale=1.0">
 
-<title>TX AUTO API</title>
+<title>TX FLOAT</title>
 
 <style>
 
@@ -17,110 +17,153 @@ content="width=device-width, initial-scale=1.0">
 }
 
 body{
-  background:#1f1f1f;
-  padding:20px;
+  overflow:hidden;
+  background:#111;
+}
+
+/* GAME */
+
+#game{
+
+  position:fixed;
+  inset:0;
+  width:100%;
+  height:100%;
+  border:none;
+}
+
+/* MENU FLOAT */
+
+#menu{
+
+  position:fixed;
+
+  top:120px;
+  right:10px;
+
+  width:220px;
+
+  background:#ffc400;
+
+  border-radius:20px;
+
+  padding:15px;
+
+  border:3px solid #111;
+
+  z-index:99999;
+
+  box-shadow:
+  0 5px 20px rgba(0,0,0,.5);
+
+}
+
+/* HEADER */
+
+.header{
+
+  display:flex;
+
+  justify-content:space-between;
+
+  align-items:center;
+
+  margin-bottom:10px;
+
+  font-size:22px;
+
+  font-weight:bold;
+}
+
+/* RESULT */
+
+.result{
+
+  text-align:center;
+
+  font-size:32px;
+
+  font-weight:bold;
+
+  margin:15px 0;
+}
+
+/* PREDICT */
+
+.predict{
+
+  background:#111;
+
+  color:#fff;
+
+  padding:12px;
+
+  border-radius:12px;
+
+  text-align:center;
+
+  font-size:24px;
+
+  margin-top:10px;
+}
+
+/* BTN */
+
+.btn{
+
+  width:100%;
+
+  height:45px;
+
+  border:none;
+
+  border-radius:12px;
+
+  font-size:20px;
+
+  margin-top:10px;
+
+  font-weight:bold;
+}
+
+.open{
+  background:#00c853;
   color:white;
 }
 
-.card{
-  width:100%;
-  max-width:380px;
-  margin:auto;
-  background:#ffc400;
-  border-radius:25px;
-  padding:20px;
-  border:4px solid #111;
-  box-shadow:0 5px 20px rgba(0,0,0,.5);
+.hide{
+  background:#ff3b30;
+  color:white;
 }
 
-.title{
-  font-size:30px;
-  font-weight:bold;
-  color:#111;
-  margin-bottom:10px;
-}
-
-.session{
-  font-size:28px;
-  font-weight:bold;
-  color:#111;
-  margin-bottom:20px;
-}
-
-.status{
-  background:#111;
-  color:#00ff90;
-  padding:10px;
-  border-radius:10px;
-  text-align:center;
-  margin-bottom:15px;
-  font-size:20px;
-}
-
-.diceBox{
-  display:flex;
-  justify-content:center;
-  gap:15px;
-  margin-bottom:20px;
-}
-
-.dice{
-  width:75px;
-  height:75px;
-  border-radius:50%;
-  background:white;
-  color:#111;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  font-size:34px;
-  font-weight:bold;
-  border:3px solid #111;
-}
-
-.result{
-  text-align:center;
-  font-size:40px;
-  font-weight:bold;
-  margin-bottom:15px;
-  color:#111;
-}
-
-.predict{
-  background:#111;
-  color:#fff;
-  padding:15px;
-  border-radius:15px;
-  text-align:center;
-  font-size:28px;
-  font-weight:bold;
-  margin-bottom:20px;
-}
-
-.info{
-  background:white;
-  border-radius:15px;
-  padding:15px;
-  color:#111;
-  font-size:20px;
-  line-height:1.8;
-}
+/* HISTORY */
 
 .history{
-  margin-top:20px;
+
   display:flex;
+
   flex-wrap:wrap;
-  gap:10px;
+
+  gap:5px;
+
+  margin-top:15px;
 }
 
 .item{
-  width:45px;
-  height:45px;
+
+  width:35px;
+  height:35px;
+
   border-radius:50%;
+
   display:flex;
+
   align-items:center;
+
   justify-content:center;
+
   color:white;
+
   font-weight:bold;
 }
 
@@ -136,55 +179,58 @@ body{
 </head>
 <body>
 
-<div class="card">
+<!-- GAME -->
 
-  <div class="title">
-    TOOL TX API
-  </div>
+<iframe
+id="game"
+src="https://play.lc79.bet/">
+</iframe>
 
-  <div class="session"
-  id="session">
-    #000000
-  </div>
+<!-- FLOAT -->
 
-  <div class="status"
-  id="status">
-    ĐANG KẾT NỐI API...
-  </div>
+<div id="menu">
 
-  <div class="diceBox">
+  <div class="header">
 
-    <div class="dice"
-    id="d1">?</div>
+    <span id="session">
+      #0000
+    </span>
 
-    <div class="dice"
-    id="d2">?</div>
-
-    <div class="dice"
-    id="d3">?</div>
+    <span onclick="toggleMenu()">
+      ✕
+    </span>
 
   </div>
 
   <div class="result"
   id="result">
+
     ...
+
   </div>
 
   <div class="predict"
   id="predict">
+
     PHÂN TÍCH...
-  </div>
-
-  <div class="info"
-  id="info">
-
-    Tổng: 0<br>
-    Người cược: 0<br>
-    Tài: 0<br>
-    Xỉu: 0<br>
-    Tiền cược: 0
 
   </div>
+
+  <button
+  class="btn open"
+  onclick="location.reload()">
+
+    REFRESH
+
+  </button>
+
+  <button
+  class="btn hide"
+  onclick="hideFloat()">
+
+    ẨN MENU
+
+  </button>
 
   <div class="history"
   id="history"></div>
@@ -193,29 +239,29 @@ body{
 
 <script>
 
-// ======================
-// API URL
-// ======================
+// ===================
+// API
+// ===================
 
-const API_URL =
+const API =
 "https://strategy-cube-vinyl-warcraft.trycloudflare.com/api/txmd5";
 
-// ======================
+// ===================
 // HISTORY
-// ======================
+// ===================
 
 let historyData = [];
 
-// ======================
-// GET DATA
-// ======================
+// ===================
+// GET API
+// ===================
 
 async function getData(){
 
   try{
 
     let res =
-    await fetch(API_URL);
+    await fetch(API);
 
     let data =
     await res.json();
@@ -226,98 +272,36 @@ async function getData(){
 
     console.log(err);
 
-    document
-    .getElementById("status")
-    .innerHTML =
-    "MẤT KẾT NỐI API";
-
   }
 }
 
-// ======================
+// ===================
 // UPDATE UI
-// ======================
+// ===================
 
 function updateUI(data){
-
-  // phiên
 
   document
   .getElementById("session")
   .innerHTML =
   "#" + data.phien;
 
-  // trạng thái
-
-  document
-  .getElementById("status")
-  .innerHTML =
-  data.betting_info.trang_thai
-  + " | "
-  + data.betting_info.dem_nguoc
-  + "s";
-
-  // xúc xắc
-
-  document
-  .getElementById("d1")
-  .innerHTML =
-  data.xuc_xac_1;
-
-  document
-  .getElementById("d2")
-  .innerHTML =
-  data.xuc_xac_2;
-
-  document
-  .getElementById("d3")
-  .innerHTML =
-  data.xuc_xac_3;
-
-  // kết quả
-
   document
   .getElementById("result")
   .innerHTML =
   data.ket_qua;
 
-  // info
+  historyData.push(
+    data.ket_qua
+  );
 
-  document
-  .getElementById("info")
-  .innerHTML = `
+  if(historyData.length > 20){
 
-  Tổng: ${data.tong}<br>
-
-  Người cược:
-  ${data.betting_info
-  .tong_nguoi_cuoc}<br>
-
-  Tài:
-  ${data.betting_info
-  .tien_cuoc.tai}<br>
-
-  Xỉu:
-  ${data.betting_info
-  .tien_cuoc.xiu}<br>
-
-  Jackpot:
-  ${data.betting_info
-  .jackpot}
-
-  `;
-
-  // history
-
-  historyData.push(data.ket_qua);
-
-  if(historyData.length > 30){
     historyData.shift();
+
   }
 
   renderHistory();
-
-  // predict
 
   let next =
   analyze();
@@ -325,12 +309,12 @@ function updateUI(data){
   document
   .getElementById("predict")
   .innerHTML =
-  "DỰ ĐOÁN: " + next;
+  "DỰ ĐOÁN " + next;
 }
 
-// ======================
-// RENDER HISTORY
-// ======================
+// ===================
+// HISTORY
+// ===================
 
 function renderHistory(){
 
@@ -362,14 +346,16 @@ function renderHistory(){
   .innerHTML = html;
 }
 
-// ======================
-// ANALYZE
-// ======================
+// ===================
+// AI
+// ===================
 
 function analyze(){
 
   if(historyData.length < 5){
-    return "ĐANG HỌC CẦU";
+
+    return "...";
+
   }
 
   let tai =
@@ -380,16 +366,92 @@ function analyze(){
   historyData.filter(
   x=>x==="Xỉu").length;
 
-  // đảo xác suất
-
   return tai > xiu
   ? "XỈU"
   : "TÀI";
 }
 
-// ======================
-// AUTO API
-// ======================
+// ===================
+// HIDE
+// ===================
+
+function hideFloat(){
+
+  document
+  .getElementById("menu")
+  .style.display =
+  "none";
+}
+
+// ===================
+// DRAG
+// ===================
+
+dragElement(
+document.getElementById("menu")
+);
+
+function dragElement(elmnt){
+
+  let pos1=0,
+      pos2=0,
+      pos3=0,
+      pos4=0;
+
+  elmnt.onmousedown =
+  dragMouseDown;
+
+  function dragMouseDown(e){
+
+    e=e||window.event;
+
+    e.preventDefault();
+
+    pos3=e.clientX;
+
+    pos4=e.clientY;
+
+    document.onmouseup =
+    closeDragElement;
+
+    document.onmousemove =
+    elementDrag;
+  }
+
+  function elementDrag(e){
+
+    e=e||window.event;
+
+    e.preventDefault();
+
+    pos1=pos3-e.clientX;
+
+    pos2=pos4-e.clientY;
+
+    pos3=e.clientX;
+
+    pos4=e.clientY;
+
+    elmnt.style.top =
+    (elmnt.offsetTop-pos2)
+    + "px";
+
+    elmnt.style.left =
+    (elmnt.offsetLeft-pos1)
+    + "px";
+  }
+
+  function closeDragElement(){
+
+    document.onmouseup=null;
+
+    document.onmousemove=null;
+  }
+}
+
+// ===================
+// AUTO
+// ===================
 
 getData();
 
