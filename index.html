@@ -38,24 +38,27 @@ body{
 
   position:fixed;
 
-  top:120px;
-  right:10px;
+  top:100px;
+  left:10px;
 
-  width:220px;
+  width:150px;
 
   background:#ffc400;
 
-  border-radius:20px;
+  border:2px solid #111;
 
-  padding:15px;
+  border-radius:16px;
 
-  border:3px solid #111;
+  padding:10px;
 
   z-index:99999;
 
   box-shadow:
-  0 5px 20px rgba(0,0,0,.5);
+  0 4px 10px rgba(0,0,0,.4);
 
+  user-select:none;
+
+  touch-action:none;
 }
 
 /* HEADER */
@@ -68,11 +71,13 @@ body{
 
   align-items:center;
 
-  margin-bottom:10px;
-
-  font-size:22px;
+  font-size:16px;
 
   font-weight:bold;
+
+  margin-bottom:8px;
+
+  cursor:move;
 }
 
 /* RESULT */
@@ -81,11 +86,11 @@ body{
 
   text-align:center;
 
-  font-size:32px;
+  font-size:22px;
 
   font-weight:bold;
 
-  margin:15px 0;
+  margin:8px 0;
 }
 
 /* PREDICT */
@@ -94,46 +99,17 @@ body{
 
   background:#111;
 
-  color:#fff;
+  color:white;
 
-  padding:12px;
+  padding:8px;
 
-  border-radius:12px;
+  border-radius:10px;
 
   text-align:center;
 
-  font-size:24px;
-
-  margin-top:10px;
-}
-
-/* BTN */
-
-.btn{
-
-  width:100%;
-
-  height:45px;
-
-  border:none;
-
-  border-radius:12px;
-
-  font-size:20px;
-
-  margin-top:10px;
+  font-size:16px;
 
   font-weight:bold;
-}
-
-.open{
-  background:#00c853;
-  color:white;
-}
-
-.hide{
-  background:#ff3b30;
-  color:white;
 }
 
 /* HISTORY */
@@ -144,15 +120,15 @@ body{
 
   flex-wrap:wrap;
 
-  gap:5px;
+  gap:4px;
 
-  margin-top:15px;
+  margin-top:8px;
 }
 
 .item{
 
-  width:35px;
-  height:35px;
+  width:24px;
+  height:24px;
 
   border-radius:50%;
 
@@ -163,6 +139,8 @@ body{
   justify-content:center;
 
   color:white;
+
+  font-size:12px;
 
   font-weight:bold;
 }
@@ -247,10 +225,12 @@ const API =
 "https://strategy-cube-vinyl-warcraft.trycloudflare.com/api/txmd5";
 
 // ===================
-// HISTORY
+// DATA
 // ===================
 
 let historyData = [];
+
+let lastSession = null;
 
 // ===================
 // GET API
@@ -265,6 +245,16 @@ async function getData(){
 
     let data =
     await res.json();
+
+    // chống lặp phiên
+
+    if(
+      data.phien === lastSession
+    ){
+      return;
+    }
+
+    lastSession = data.phien;
 
     updateUI(data);
 
@@ -281,15 +271,21 @@ async function getData(){
 
 function updateUI(data){
 
+  // session
+
   document
   .getElementById("session")
   .innerHTML =
   "#" + data.phien;
 
+  // result
+
   document
   .getElementById("result")
   .innerHTML =
-  data.ket_qua;
+  data.ket_qua || "...";
+
+  // history
 
   historyData.push(
     data.ket_qua
@@ -302,6 +298,8 @@ function updateUI(data){
   }
 
   renderHistory();
+
+  // predict
 
   let next =
   analyze();
@@ -358,13 +356,20 @@ function analyze(){
 
   }
 
+  // 5 phiên gần nhất
+
+  let last5 =
+  historyData.slice(-5);
+
   let tai =
-  historyData.filter(
+  last5.filter(
   x=>x==="Tài").length;
 
   let xiu =
-  historyData.filter(
+  last5.filter(
   x=>x==="Xỉu").length;
+
+  // đảo cầu
 
   return tai > xiu
   ? "XỈU"
@@ -384,70 +389,98 @@ function hideFloat(){
 }
 
 // ===================
-// DRAG
+// DRAG MOBILE + PC
 // ===================
 
-dragElement(
-document.getElementById("menu")
-);
+const menu =
+document.getElementById("menu");
 
-function dragElement(elmnt){
+let isDragging = false;
 
-  let pos1=0,
-      pos2=0,
-      pos3=0,
-      pos4=0;
+let offsetX = 0;
+let offsetY = 0;
 
-  elmnt.onmousedown =
-  dragMouseDown;
+// MOBILE
 
-  function dragMouseDown(e){
+menu.addEventListener(
+"touchstart",
+e=>{
 
-    e=e||window.event;
+  isDragging = true;
 
-    e.preventDefault();
+  offsetX =
+  e.touches[0].clientX
+  - menu.offsetLeft;
 
-    pos3=e.clientX;
+  offsetY =
+  e.touches[0].clientY
+  - menu.offsetTop;
+});
 
-    pos4=e.clientY;
+document.addEventListener(
+"touchmove",
+e=>{
 
-    document.onmouseup =
-    closeDragElement;
+  if(!isDragging) return;
 
-    document.onmousemove =
-    elementDrag;
-  }
+  menu.style.left =
+  (e.touches[0].clientX
+  - offsetX)
+  + "px";
 
-  function elementDrag(e){
+  menu.style.top =
+  (e.touches[0].clientY
+  - offsetY)
+  + "px";
+});
 
-    e=e||window.event;
+document.addEventListener(
+"touchend",
+()=>{
 
-    e.preventDefault();
+  isDragging = false;
 
-    pos1=pos3-e.clientX;
+});
 
-    pos2=pos4-e.clientY;
+// PC
 
-    pos3=e.clientX;
+menu.addEventListener(
+"mousedown",
+e=>{
 
-    pos4=e.clientY;
+  isDragging = true;
 
-    elmnt.style.top =
-    (elmnt.offsetTop-pos2)
-    + "px";
+  offsetX =
+  e.clientX
+  - menu.offsetLeft;
 
-    elmnt.style.left =
-    (elmnt.offsetLeft-pos1)
-    + "px";
-  }
+  offsetY =
+  e.clientY
+  - menu.offsetTop;
+});
 
-  function closeDragElement(){
+document.addEventListener(
+"mousemove",
+e=>{
 
-    document.onmouseup=null;
+  if(!isDragging) return;
 
-    document.onmousemove=null;
-  }
-}
+  menu.style.left =
+  (e.clientX-offsetX)
+  + "px";
+
+  menu.style.top =
+  (e.clientY-offsetY)
+  + "px";
+});
+
+document.addEventListener(
+"mouseup",
+()=>{
+
+  isDragging = false;
+
+});
 
 // ===================
 // AUTO
