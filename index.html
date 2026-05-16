@@ -289,7 +289,8 @@ src="https://play.sum.vin/">
 // ===================
 
 const API =
-"https://api.allorigins.win/raw?url=https://strategy-cube-vinyl-warcraft.trycloudflare.com/api/txmd5";
+"https://cricket-compressed-list-suppose.trycloudflare.com/api/md5";
+
 // ===================
 // DATA
 // ===================
@@ -299,7 +300,7 @@ JSON.parse(
 localStorage.getItem("tx")
 ) || [];
 
-let lastSession = null;
+let lastSession = "";
 
 // ===================
 // NORMALIZE
@@ -311,6 +312,7 @@ function normalizeResult(text){
 
   text = text
   .toString()
+  .trim()
   .toLowerCase();
 
   if(
@@ -332,28 +334,67 @@ async function getData(){
   try{
 
     let res =
-    await fetch(API);
+    await fetch(API,{
 
-    let text =
-    await res.text();
+      method:"GET",
+
+      cache:"no-cache",
+
+      headers:{
+        "Accept":"application/json"
+      }
+
+    });
+
+    // check api
+
+    if(!res.ok){
+
+      throw new Error(
+        "API ERROR"
+      );
+
+    }
 
     let data =
-    JSON.parse(text);
+    await res.json();
+
+    console.log(data);
+
+    // check data
 
     if(
-      data.phien === lastSession
+      !data
+      || !data.phien
+    ){
+      return;
+    }
+
+    // fix string
+
+    let currentSession =
+    String(data.phien);
+
+    // chống trùng phiên
+
+    if(
+      currentSession
+      === lastSession
     ){
       return;
     }
 
     lastSession =
-    data.phien;
+    currentSession;
 
     updateUI(data);
 
   }catch(err){
 
-    console.log(err);
+    console.log(
+      "API ERROR:",
+      err
+    );
 
     document
     .getElementById("predict")
@@ -393,20 +434,26 @@ function updateUI(data){
 
   historyData.push(result);
 
+  // max 20
+
   if(historyData.length > 20){
 
     historyData.shift();
 
   }
 
+  // save local
+
   localStorage.setItem(
     "tx",
     JSON.stringify(historyData)
   );
 
+  // render
+
   renderHistory();
 
-  // PREDICT
+  // predict
 
   let next =
   analyze();
@@ -419,46 +466,72 @@ function updateUI(data){
 
   // INFO
 
+  let taiPlayer =
+  data.total_tai
+  || data.betting_info?.nguoi_cuoc?.tai
+  || 0;
+
+  let xiuPlayer =
+  data.total_xiu
+  || data.betting_info?.nguoi_cuoc?.xiu
+  || 0;
+
+  let taiMoney =
+  data.total_bet_tai
+  || data.betting_info?.tien_cuoc?.tai
+  || 0;
+
+  let xiuMoney =
+  data.total_bet_xiu
+  || data.betting_info?.tien_cuoc?.xiu
+  || 0;
+
   document
   .getElementById("info")
   .innerHTML = `
 
-  🎲 ${data.xuc_xac_1}
-  - ${data.xuc_xac_2}
-  - ${data.xuc_xac_3}
+  🎲 ${data.xuc_xac_1 || 0}
+  - ${data.xuc_xac_2 || 0}
+  - ${data.xuc_xac_3 || 0}
 
   <br>
 
   Tổng:
-  ${data.tong}
+  ${data.tong || 0}
 
   <br>
 
   👤 Tài:
-  ${data.total_tai}
+  ${taiPlayer}
 
   <br>
 
   👤 Xỉu:
-  ${data.total_xiu}
+  ${xiuPlayer}
 
   <br>
 
   💰 Tài:
   ${Number(
-    data.total_bet_tai
+    String(taiMoney)
+    .replace(/\./g,"")
   ).toLocaleString()}
 
   <br>
 
   💰 Xỉu:
   ${Number(
-    data.total_bet_xiu
+    String(xiuMoney)
+    .replace(/\./g,"")
   ).toLocaleString()}
 
   <br>
 
-  🕒 ${data.update_at}
+  🕒 ${
+    data.update_at
+    || data.tick_update_at
+    || "..."
+  }
 
   `;
 }
@@ -482,7 +555,8 @@ function renderHistory(){
     item ${item}">
 
     ${item==="tai"
-    ?"T":"X"}
+    ? "T"
+    : "X"}
 
     </div>
 
@@ -492,7 +566,8 @@ function renderHistory(){
 
   document
   .getElementById("history")
-  .innerHTML = html;
+  .innerHTML =
+  html;
 }
 
 // ===================
@@ -501,11 +576,15 @@ function renderHistory(){
 
 function analyze(){
 
+  // chưa đủ dữ liệu
+
   if(historyData.length <= 1){
 
     return "ĐANG HỌC";
 
   }
+
+  // 10 phiên gần
 
   let last10 =
   historyData.slice(-10);
@@ -527,6 +606,8 @@ function analyze(){
 
   });
 
+  // cầu đảo
+
   if(tai > xiu){
 
     return "XỈU";
@@ -538,6 +619,8 @@ function analyze(){
     return "TÀI";
 
   }
+
+  // random nếu cân
 
   return Math.random() > 0.5
   ? "TÀI"
@@ -557,7 +640,7 @@ function hideFloat(){
 }
 
 // ===================
-// DRAG MOBILE + PC
+// DRAG
 // ===================
 
 const menu =
@@ -592,14 +675,16 @@ e=>{
   if(!isDragging) return;
 
   menu.style.left =
-  (e.touches[0].clientX
-  - offsetX)
-  + "px";
+  (
+    e.touches[0].clientX
+    - offsetX
+  ) + "px";
 
   menu.style.top =
-  (e.touches[0].clientY
-  - offsetY)
-  + "px";
+  (
+    e.touches[0].clientY
+    - offsetY
+  ) + "px";
 });
 
 document.addEventListener(
@@ -634,12 +719,16 @@ e=>{
   if(!isDragging) return;
 
   menu.style.left =
-  (e.clientX-offsetX)
-  + "px";
+  (
+    e.clientX
+    - offsetX
+  ) + "px";
 
   menu.style.top =
-  (e.clientY-offsetY)
-  + "px";
+  (
+    e.clientY
+    - offsetY
+  ) + "px";
 });
 
 document.addEventListener(
