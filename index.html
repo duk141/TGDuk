@@ -277,11 +277,6 @@ src="https://play.sum.vin/">
 
   </div>
 
-  <div class="history"
-  id="history"></div>
-
-</div>
-
 <script>
 
 // ===================
@@ -485,54 +480,24 @@ function updateUI(data){
   || data.betting_info?.tien_cuoc?.xiu
   || 0;
 
-  document
-  .getElementById("info")
-  .innerHTML = `
+document
+.getElementById("info")
+.innerHTML = `
 
-  🎲 ${data.xuc_xac_1 || 0}
-  - ${data.xuc_xac_2 || 0}
-  - ${data.xuc_xac_3 || 0}
+🎲 ${data.xuc_xac_1}
+- ${data.xuc_xac_2}
+- ${data.xuc_xac_3}
 
-  <br>
+<br>
 
-  Tổng:
-  ${data.tong || 0}
+Tổng:
+${data.tong}
 
-  <br>
+<br>
 
-  👤 Tài:
-  ${taiPlayer}
+🕒 ${data.update_at}
 
-  <br>
-
-  👤 Xỉu:
-  ${xiuPlayer}
-
-  <br>
-
-  💰 Tài:
-  ${Number(
-    String(taiMoney)
-    .replace(/\./g,"")
-  ).toLocaleString()}
-
-  <br>
-
-  💰 Xỉu:
-  ${Number(
-    String(xiuMoney)
-    .replace(/\./g,"")
-  ).toLocaleString()}
-
-  <br>
-
-  🕒 ${
-    data.update_at
-    || data.tick_update_at
-    || "..."
-  }
-
-  `;
+`;
 }
 
 // ===================
@@ -577,21 +542,21 @@ function analyze(){
 
   // chưa đủ dữ liệu
 
-  if(historyData.length <= 1){
+  if(historyData.length < 3){
 
     return "ĐANG HỌC";
 
   }
 
-  // 10 phiên gần
+  // lấy 6 phiên gần nhất
 
-  let last10 =
-  historyData.slice(-10);
+  let last6 =
+  historyData.slice(-6);
 
   let tai = 0;
   let xiu = 0;
 
-  last10.forEach(item=>{
+  last6.forEach(item=>{
 
     if(item==="tai"){
 
@@ -605,23 +570,44 @@ function analyze(){
 
   });
 
-  // cầu đảo
+  // ===== BỆT CẦU =====
 
-  if(tai > xiu){
+  // tài nhiều -> theo tài
 
-    return "XỈU";
-
-  }
-
-  if(xiu > tai){
+  if(tai >= 4){
 
     return "TÀI";
 
   }
 
-  // random nếu cân
+  // xỉu nhiều -> theo xỉu
 
-  return Math.random() > 0.5
+  if(xiu >= 4){
+
+    return "XỈU";
+
+  }
+
+  // ===== CẦU 1-1 =====
+
+  let last1 =
+  last6[last6.length-1];
+
+  let last2 =
+  last6[last6.length-2];
+
+  // đảo nếu 1-1
+
+  if(last1 !== last2){
+
+    return last1==="tai"
+    ? "XỈU"
+    : "TÀI";
+  }
+
+  // ===== MẶC ĐỊNH =====
+
+  return tai >= xiu
   ? "TÀI"
   : "XỈU";
 }
