@@ -233,6 +233,28 @@ let historyData = [];
 let lastSession = null;
 
 // ===================
+// NORMALIZE
+// ===================
+
+function normalizeResult(text){
+
+  if(!text) return "";
+
+  text = text
+  .toString()
+  .toLowerCase();
+
+  if(
+    text.includes("tài")
+    || text.includes("tai")
+  ){
+    return "tai";
+  }
+
+  return "xiu";
+}
+
+// ===================
 // GET API
 // ===================
 
@@ -254,7 +276,8 @@ async function getData(){
       return;
     }
 
-    lastSession = data.phien;
+    lastSession =
+    data.phien;
 
     updateUI(data);
 
@@ -271,25 +294,30 @@ async function getData(){
 
 function updateUI(data){
 
-  // session
+  // SESSION
 
   document
   .getElementById("session")
   .innerHTML =
   "#" + data.phien;
 
-  // result
+  // RESULT
+
+  let result =
+  normalizeResult(
+    data.ket_qua
+  );
 
   document
   .getElementById("result")
   .innerHTML =
-  data.ket_qua || "...";
+  result === "tai"
+  ? "TÀI"
+  : "XỈU";
 
-  // history
+  // HISTORY
 
-  historyData.push(
-    data.ket_qua
-  );
+  historyData.push(result);
 
   if(historyData.length > 20){
 
@@ -299,7 +327,7 @@ function updateUI(data){
 
   renderHistory();
 
-  // predict
+  // PREDICT
 
   let next =
   analyze();
@@ -307,7 +335,8 @@ function updateUI(data){
   document
   .getElementById("predict")
   .innerHTML =
-  "DỰ ĐOÁN " + next;
+  "DỰ ĐOÁN "
+  + next;
 }
 
 // ===================
@@ -326,11 +355,9 @@ function renderHistory(){
     html += `
 
     <div class="
-    item
-    ${item==="Tài"
-    ?"tai":"xiu"}">
+    item ${item}">
 
-    ${item==="Tài"
+    ${item==="tai"
     ?"T":"X"}
 
     </div>
@@ -356,20 +383,29 @@ function analyze(){
 
   }
 
-  // 5 phiên gần nhất
+  // 10 phiên gần
 
-  let last5 =
-  historyData.slice(-5);
+  let last10 =
+  historyData.slice(-10);
 
-  let tai =
-  last5.filter(
-  x=>x==="Tài").length;
+  let tai = 0;
+  let xiu = 0;
 
-  let xiu =
-  last5.filter(
-  x=>x==="Xỉu").length;
+  last10.forEach(item=>{
 
-  // đảo cầu
+    if(item==="tai"){
+
+      tai++;
+
+    }else{
+
+      xiu++;
+
+    }
+
+  });
+
+  // cầu đảo
 
   return tai > xiu
   ? "XỈU"
