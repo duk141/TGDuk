@@ -2,8 +2,10 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tool TX API</title>
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
+
+<title>TX AUTO API</title>
 
 <style>
 
@@ -15,35 +17,44 @@
 }
 
 body{
-  background:#ececec;
+  background:#1f1f1f;
   padding:20px;
-}
-
-.header{
-  width:100%;
-  background:#5d6eb3;
   color:white;
-  padding:20px;
-  border-radius:15px;
-  font-size:30px;
-  font-weight:bold;
-  margin-bottom:20px;
 }
 
 .card{
-  background:#ffc400;
-  border:4px solid #000;
-  border-radius:20px;
-  padding:20px;
-  max-width:320px;
+  width:100%;
+  max-width:380px;
   margin:auto;
-  box-shadow:0 5px 15px rgba(0,0,0,.3);
+  background:#ffc400;
+  border-radius:25px;
+  padding:20px;
+  border:4px solid #111;
+  box-shadow:0 5px 20px rgba(0,0,0,.5);
+}
+
+.title{
+  font-size:30px;
+  font-weight:bold;
+  color:#111;
+  margin-bottom:10px;
 }
 
 .session{
-  font-size:30px;
+  font-size:28px;
   font-weight:bold;
+  color:#111;
   margin-bottom:20px;
+}
+
+.status{
+  background:#111;
+  color:#00ff90;
+  padding:10px;
+  border-radius:10px;
+  text-align:center;
+  margin-bottom:15px;
+  font-size:20px;
 }
 
 .diceBox{
@@ -54,41 +65,45 @@ body{
 }
 
 .dice{
-  width:70px;
-  height:70px;
+  width:75px;
+  height:75px;
   border-radius:50%;
   background:white;
-  border:3px solid #222;
+  color:#111;
   display:flex;
-  align-items:center;
   justify-content:center;
-  font-size:30px;
+  align-items:center;
+  font-size:34px;
   font-weight:bold;
+  border:3px solid #111;
 }
 
 .result{
   text-align:center;
-  font-size:35px;
+  font-size:40px;
   font-weight:bold;
-  margin-top:10px;
+  margin-bottom:15px;
+  color:#111;
 }
 
 .predict{
-  text-align:center;
-  margin-top:20px;
-  padding:15px;
   background:#111;
   color:#fff;
-  border-radius:12px;
+  padding:15px;
+  border-radius:15px;
+  text-align:center;
   font-size:28px;
+  font-weight:bold;
+  margin-bottom:20px;
 }
 
-.stats{
-  margin-top:20px;
-  background:#fff;
-  border-radius:12px;
+.info{
+  background:white;
+  border-radius:15px;
   padding:15px;
-  font-size:22px;
+  color:#111;
+  font-size:20px;
+  line-height:1.8;
 }
 
 .history{
@@ -99,14 +114,14 @@ body{
 }
 
 .item{
-  width:50px;
-  height:50px;
+  width:45px;
+  height:45px;
   border-radius:50%;
   display:flex;
   align-items:center;
   justify-content:center;
-  font-weight:bold;
   color:white;
+  font-weight:bold;
 }
 
 .tai{
@@ -117,247 +132,274 @@ body{
   background:#007aff;
 }
 
-.online{
-  color:#1fa855;
-  font-size:22px;
-  margin-top:15px;
-  text-align:center;
-}
-
 </style>
 </head>
 <body>
 
-<div class="header">
-  Tool Phân Tích TX API
-</div>
-
 <div class="card">
 
-  <div class="session" id="session">
+  <div class="title">
+    TOOL TX API
+  </div>
+
+  <div class="session"
+  id="session">
     #000000
   </div>
 
+  <div class="status"
+  id="status">
+    ĐANG KẾT NỐI API...
+  </div>
+
   <div class="diceBox">
-    <div class="dice" id="d1">?</div>
-    <div class="dice" id="d2">?</div>
-    <div class="dice" id="d3">?</div>
+
+    <div class="dice"
+    id="d1">?</div>
+
+    <div class="dice"
+    id="d2">?</div>
+
+    <div class="dice"
+    id="d3">?</div>
+
   </div>
 
-  <div class="result" id="result">
-    ĐANG CHỜ...
+  <div class="result"
+  id="result">
+    ...
   </div>
 
-  <div class="predict" id="predict">
+  <div class="predict"
+  id="predict">
     PHÂN TÍCH...
   </div>
 
-  <div class="online">
-    ● AUTO API REALTIME
-  </div>
+  <div class="info"
+  id="info">
 
-  <div class="stats" id="stats">
+    Tổng: 0<br>
+    Người cược: 0<br>
     Tài: 0<br>
-    Xỉu: 0
+    Xỉu: 0<br>
+    Tiền cược: 0
+
   </div>
 
-  <div class="history" id="history"></div>
+  <div class="history"
+  id="history"></div>
 
 </div>
 
 <script>
 
-// =========================
+// ======================
 // API URL
-// =========================
+// ======================
 
-const API_URL = "https://strategy-cube-vinyl-warcraft.trycloudflare.com/api/tx";
+const API_URL =
+"https://strategy-cube-vinyl-warcraft.trycloudflare.com/api/txmd5";
 
-// =========================
+// ======================
 // HISTORY
-// =========================
+// ======================
 
 let historyData = [];
 
-// =========================
-// GET API
-// =========================
+// ======================
+// GET DATA
+// ======================
 
 async function getData(){
 
   try{
 
-    // =========================
-    // DEMO DATA
-    // =========================
+    let res =
+    await fetch(API_URL);
 
-    // THAY fetch thật vào đây
+    let data =
+    await res.json();
 
-    let fake = createFakeData();
-
-    updateUI(fake);
+    updateUI(data);
 
   }catch(err){
+
     console.log(err);
+
+    document
+    .getElementById("status")
+    .innerHTML =
+    "MẤT KẾT NỐI API";
+
   }
 }
 
-// =========================
+// ======================
 // UPDATE UI
-// =========================
+// ======================
 
 function updateUI(data){
 
-  document.getElementById("session")
-  .innerHTML = "#" + data.session;
+  // phiên
 
-  document.getElementById("d1")
-  .innerHTML = data.dice[0];
+  document
+  .getElementById("session")
+  .innerHTML =
+  "#" + data.phien;
 
-  document.getElementById("d2")
-  .innerHTML = data.dice[1];
+  // trạng thái
 
-  document.getElementById("d3")
-  .innerHTML = data.dice[2];
+  document
+  .getElementById("status")
+  .innerHTML =
+  data.betting_info.trang_thai
+  + " | "
+  + data.betting_info.dem_nguoc
+  + "s";
 
-  document.getElementById("result")
-  .innerHTML = data.result;
+  // xúc xắc
 
-  historyData.push(data.result);
+  document
+  .getElementById("d1")
+  .innerHTML =
+  data.xuc_xac_1;
 
-  if(historyData.length > 50){
+  document
+  .getElementById("d2")
+  .innerHTML =
+  data.xuc_xac_2;
+
+  document
+  .getElementById("d3")
+  .innerHTML =
+  data.xuc_xac_3;
+
+  // kết quả
+
+  document
+  .getElementById("result")
+  .innerHTML =
+  data.ket_qua;
+
+  // info
+
+  document
+  .getElementById("info")
+  .innerHTML = `
+
+  Tổng: ${data.tong}<br>
+
+  Người cược:
+  ${data.betting_info
+  .tong_nguoi_cuoc}<br>
+
+  Tài:
+  ${data.betting_info
+  .tien_cuoc.tai}<br>
+
+  Xỉu:
+  ${data.betting_info
+  .tien_cuoc.xiu}<br>
+
+  Jackpot:
+  ${data.betting_info
+  .jackpot}
+
+  `;
+
+  // history
+
+  historyData.push(data.ket_qua);
+
+  if(historyData.length > 30){
     historyData.shift();
   }
 
   renderHistory();
-  renderStats();
 
-  let next = analyzeMarkov();
+  // predict
 
-  document.getElementById("predict")
-  .innerHTML = "DỰ ĐOÁN: " + next;
+  let next =
+  analyze();
+
+  document
+  .getElementById("predict")
+  .innerHTML =
+  "DỰ ĐOÁN: " + next;
 }
 
-// =========================
-// HISTORY
-// =========================
+// ======================
+// RENDER HISTORY
+// ======================
 
 function renderHistory(){
 
   let html = "";
 
-  historyData.slice().reverse().forEach(item=>{
+  historyData
+  .slice()
+  .reverse()
+  .forEach(item=>{
 
     html += `
-      <div class="item ${item === "TÀI" ? "tai" : "xiu"}">
-        ${item === "TÀI" ? "T" : "X"}
-      </div>
+
+    <div class="
+    item
+    ${item==="Tài"
+    ?"tai":"xiu"}">
+
+    ${item==="Tài"
+    ?"T":"X"}
+
+    </div>
+
     `;
 
   });
 
-  document.getElementById("history")
+  document
+  .getElementById("history")
   .innerHTML = html;
 }
 
-// =========================
-// STATS
-// =========================
+// ======================
+// ANALYZE
+// ======================
 
-function renderStats(){
-
-  let tai =
-  historyData.filter(x=>x === "TÀI").length;
-
-  let xiu =
-  historyData.filter(x=>x === "XỈU").length;
-
-  document.getElementById("stats")
-  .innerHTML = `
-    Tài: ${tai}<br>
-    Xỉu: ${xiu}
-  `;
-}
-
-// =========================
-// MARKOV
-// =========================
-
-function analyzeMarkov(){
+function analyze(){
 
   if(historyData.length < 5){
-    return "ĐANG PHÂN TÍCH";
+    return "ĐANG HỌC CẦU";
   }
-
-  let last = historyData[
-    historyData.length - 1
-  ];
-
-  let afterTai = [];
-  let afterXiu = [];
-
-  for(let i=0;i<historyData.length-1;i++){
-
-    if(historyData[i] === "TÀI"){
-      afterTai.push(historyData[i+1]);
-    }
-
-    if(historyData[i] === "XỈU"){
-      afterXiu.push(historyData[i+1]);
-    }
-  }
-
-  let arr = last === "TÀI"
-  ? afterTai
-  : afterXiu;
 
   let tai =
-  arr.filter(x=>x === "TÀI").length;
+  historyData.filter(
+  x=>x==="Tài").length;
 
   let xiu =
-  arr.filter(x=>x === "XỈU").length;
+  historyData.filter(
+  x=>x==="Xỉu").length;
+
+  // đảo xác suất
 
   return tai > xiu
-  ? "TÀI"
-  : "XỈU";
+  ? "XỈU"
+  : "TÀI";
 }
 
-// =========================
-// DEMO DATA
-// =========================
-
-function createFakeData(){
-
-  let dice1 = rand(1,6);
-  let dice2 = rand(1,6);
-  let dice3 = rand(1,6);
-
-  let total = dice1 + dice2 + dice3;
-
-  return {
-    session: Math.floor(Math.random()*9999999),
-    dice:[dice1,dice2,dice3],
-    total:total,
-    result: total >= 11 ? "TÀI" : "XỈU"
-  };
-}
-
-function rand(min,max){
-  return Math.floor(
-    Math.random()*(max-min+1)
-  ) + min;
-}
-
-// =========================
-// AUTO REFRESH
-// =========================
+// ======================
+// AUTO API
+// ======================
 
 getData();
 
 setInterval(()=>{
+
   getData();
-},5000);
+
+},3000);
 
 </script>
+
 </body>
 </html>
