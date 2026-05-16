@@ -24,7 +24,6 @@ body{
 /* GAME */
 
 #game{
-
   position:fixed;
   inset:0;
   width:100%;
@@ -32,7 +31,7 @@ body{
   border:none;
 }
 
-/* MENU FLOAT */
+/* FLOAT MENU */
 
 #menu{
 
@@ -41,7 +40,7 @@ body{
   top:100px;
   left:10px;
 
-  width:150px;
+  width:170px;
 
   background:#ffc400;
 
@@ -86,11 +85,13 @@ body{
 
   text-align:center;
 
-  font-size:22px;
+  font-size:24px;
 
   font-weight:bold;
 
   margin:8px 0;
+
+  color:#111;
 }
 
 /* PREDICT */
@@ -99,17 +100,80 @@ body{
 
   background:#111;
 
-  color:white;
+  color:#00ff90;
 
-  padding:8px;
+  padding:10px;
 
   border-radius:10px;
 
   text-align:center;
 
-  font-size:16px;
+  font-size:15px;
 
   font-weight:bold;
+
+  min-height:45px;
+
+  display:flex;
+
+  align-items:center;
+
+  justify-content:center;
+
+  white-space:nowrap;
+
+  overflow:hidden;
+
+  box-shadow:
+  0 0 10px #00ff90;
+}
+
+/* BUTTON */
+
+.btn{
+
+  width:100%;
+
+  border:none;
+
+  border-radius:10px;
+
+  height:36px;
+
+  margin-top:8px;
+
+  font-size:13px;
+
+  font-weight:bold;
+}
+
+.open{
+  background:#00c853;
+  color:white;
+}
+
+.hide{
+  background:#ff3b30;
+  color:white;
+}
+
+/* INFO */
+
+.info{
+
+  margin-top:8px;
+
+  background:white;
+
+  border-radius:10px;
+
+  padding:6px;
+
+  color:#111;
+
+  font-size:12px;
+
+  line-height:1.5;
 }
 
 /* HISTORY */
@@ -174,7 +238,7 @@ src="https://play.sum.vin/">
       #0000
     </span>
 
-    <span onclick="toggleMenu()">
+    <span onclick="hideFloat()">
       ✕
     </span>
 
@@ -182,16 +246,12 @@ src="https://play.sum.vin/">
 
   <div class="result"
   id="result">
-
     ...
-
   </div>
 
   <div class="predict"
   id="predict">
-
-    PHÂN TÍCH...
-
+    ĐANG PHÂN TÍCH
   </div>
 
   <button
@@ -209,6 +269,13 @@ src="https://play.sum.vin/">
     ẨN MENU
 
   </button>
+
+  <div class="info"
+  id="info">
+
+    ĐANG TẢI...
+
+  </div>
 
   <div class="history"
   id="history"></div>
@@ -228,7 +295,10 @@ const API =
 // DATA
 // ===================
 
-let historyData = [];
+let historyData =
+JSON.parse(
+localStorage.getItem("tx")
+) || [];
 
 let lastSession = null;
 
@@ -265,10 +335,11 @@ async function getData(){
     let res =
     await fetch(API);
 
-    let data =
-    await res.json();
+    let text =
+    await res.text();
 
-    // chống lặp phiên
+    let data =
+    JSON.parse(text);
 
     if(
       data.phien === lastSession
@@ -285,6 +356,10 @@ async function getData(){
 
     console.log(err);
 
+    document
+    .getElementById("predict")
+    .innerHTML =
+    "LỖI API";
   }
 }
 
@@ -311,7 +386,7 @@ function updateUI(data){
   document
   .getElementById("result")
   .innerHTML =
-  result === "tai"
+  result==="tai"
   ? "TÀI"
   : "XỈU";
 
@@ -325,6 +400,11 @@ function updateUI(data){
 
   }
 
+  localStorage.setItem(
+    "tx",
+    JSON.stringify(historyData)
+  );
+
   renderHistory();
 
   // PREDICT
@@ -337,6 +417,51 @@ function updateUI(data){
   .innerHTML =
   "DỰ ĐOÁN "
   + next;
+
+  // INFO
+
+  document
+  .getElementById("info")
+  .innerHTML = `
+
+  🎲 ${data.xuc_xac_1}
+  - ${data.xuc_xac_2}
+  - ${data.xuc_xac_3}
+
+  <br>
+
+  Tổng:
+  ${data.tong}
+
+  <br>
+
+  👤 Tài:
+  ${data.total_tai}
+
+  <br>
+
+  👤 Xỉu:
+  ${data.total_xiu}
+
+  <br>
+
+  💰 Tài:
+  ${Number(
+    data.total_bet_tai
+  ).toLocaleString()}
+
+  <br>
+
+  💰 Xỉu:
+  ${Number(
+    data.total_bet_xiu
+  ).toLocaleString()}
+
+  <br>
+
+  🕒 ${data.update_at}
+
+  `;
 }
 
 // ===================
@@ -377,13 +502,11 @@ function renderHistory(){
 
 function analyze(){
 
-  if(historyData.length < 3){
+  if(historyData.length <= 1){
 
-    return "...";
+    return "ĐANG HỌC";
 
   }
-
-  // 10 phiên gần
 
   let last10 =
   historyData.slice(-10);
@@ -405,11 +528,21 @@ function analyze(){
 
   });
 
-  // cầu đảo
+  if(tai > xiu){
 
-  return tai > xiu
-  ? "XỈU"
-  : "TÀI";
+    return "XỈU";
+
+  }
+
+  if(xiu > tai){
+
+    return "TÀI";
+
+  }
+
+  return Math.random() > 0.5
+  ? "TÀI"
+  : "XỈU";
 }
 
 // ===================
