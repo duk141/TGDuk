@@ -1,84 +1,363 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
-
 <meta charset="UTF-8">
-<meta name="viewport"
-content="width=device-width, initial-scale=1">
-
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tool TX API</title>
 
 <style>
 
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:Arial;
+}
+
 body{
-    background:#101820;
-    color:white;
-    font-family:sans-serif;
-    text-align:center;
-    padding-top:40px;
+  background:#ececec;
+  padding:20px;
 }
 
-.box{
-    width:90%;
-    margin:auto;
-    background:#1b2631;
-    border-radius:20px;
-    padding:20px;
+.header{
+  width:100%;
+  background:#5d6eb3;
+  color:white;
+  padding:20px;
+  border-radius:15px;
+  font-size:30px;
+  font-weight:bold;
+  margin-bottom:20px;
 }
 
-button{
-
-    width:220px;
-    height:60px;
-
-    border:none;
-    border-radius:15px;
-
-    font-size:22px;
-
-    background:#2ea6ff;
-    color:white;
+.card{
+  background:#ffc400;
+  border:4px solid #000;
+  border-radius:20px;
+  padding:20px;
+  max-width:320px;
+  margin:auto;
+  box-shadow:0 5px 15px rgba(0,0,0,.3);
 }
 
-#result{
-    font-size:40px;
-    margin-top:20px;
+.session{
+  font-size:30px;
+  font-weight:bold;
+  margin-bottom:20px;
+}
+
+.diceBox{
+  display:flex;
+  justify-content:center;
+  gap:15px;
+  margin-bottom:20px;
+}
+
+.dice{
+  width:70px;
+  height:70px;
+  border-radius:50%;
+  background:white;
+  border:3px solid #222;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:30px;
+  font-weight:bold;
+}
+
+.result{
+  text-align:center;
+  font-size:35px;
+  font-weight:bold;
+  margin-top:10px;
+}
+
+.predict{
+  text-align:center;
+  margin-top:20px;
+  padding:15px;
+  background:#111;
+  color:#fff;
+  border-radius:12px;
+  font-size:28px;
+}
+
+.stats{
+  margin-top:20px;
+  background:#fff;
+  border-radius:12px;
+  padding:15px;
+  font-size:22px;
+}
+
+.history{
+  margin-top:20px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+}
+
+.item{
+  width:50px;
+  height:50px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:bold;
+  color:white;
+}
+
+.tai{
+  background:#ff3b30;
+}
+
+.xiu{
+  background:#007aff;
+}
+
+.online{
+  color:#1fa855;
+  font-size:22px;
+  margin-top:15px;
+  text-align:center;
 }
 
 </style>
 </head>
-
 <body>
 
-<div class="box">
+<div class="header">
+  Tool Phân Tích TX API
+</div>
 
-<h1>🤖 TOOL TELEGRAM</h1>
+<div class="card">
 
-<button onclick="random()">
-🎲 RANDOM
-</button>
+  <div class="session" id="session">
+    #000000
+  </div>
 
-<div id="result"></div>
+  <div class="diceBox">
+    <div class="dice" id="d1">?</div>
+    <div class="dice" id="d2">?</div>
+    <div class="dice" id="d3">?</div>
+  </div>
+
+  <div class="result" id="result">
+    ĐANG CHỜ...
+  </div>
+
+  <div class="predict" id="predict">
+    PHÂN TÍCH...
+  </div>
+
+  <div class="online">
+    ● AUTO API REALTIME
+  </div>
+
+  <div class="stats" id="stats">
+    Tài: 0<br>
+    Xỉu: 0
+  </div>
+
+  <div class="history" id="history"></div>
 
 </div>
 
 <script>
 
-let tg = window.Telegram.WebApp;
+// =========================
+// API URL
+// =========================
 
-tg.expand();
+const API_URL = "https://strategy-cube-vinyl-warcraft.trycloudflare.com/api/tx";
 
-function random(){
+// =========================
+// HISTORY
+// =========================
 
-    let n =
-    Math.floor(Math.random()*100);
+let historyData = [];
 
-    document.getElementById("result")
-    .innerHTML = n;
+// =========================
+// GET API
+// =========================
 
+async function getData(){
+
+  try{
+
+    // =========================
+    // DEMO DATA
+    // =========================
+
+    // THAY fetch thật vào đây
+
+    let fake = createFakeData();
+
+    updateUI(fake);
+
+  }catch(err){
+    console.log(err);
+  }
 }
 
-</script>
+// =========================
+// UPDATE UI
+// =========================
 
+function updateUI(data){
+
+  document.getElementById("session")
+  .innerHTML = "#" + data.session;
+
+  document.getElementById("d1")
+  .innerHTML = data.dice[0];
+
+  document.getElementById("d2")
+  .innerHTML = data.dice[1];
+
+  document.getElementById("d3")
+  .innerHTML = data.dice[2];
+
+  document.getElementById("result")
+  .innerHTML = data.result;
+
+  historyData.push(data.result);
+
+  if(historyData.length > 50){
+    historyData.shift();
+  }
+
+  renderHistory();
+  renderStats();
+
+  let next = analyzeMarkov();
+
+  document.getElementById("predict")
+  .innerHTML = "DỰ ĐOÁN: " + next;
+}
+
+// =========================
+// HISTORY
+// =========================
+
+function renderHistory(){
+
+  let html = "";
+
+  historyData.slice().reverse().forEach(item=>{
+
+    html += `
+      <div class="item ${item === "TÀI" ? "tai" : "xiu"}">
+        ${item === "TÀI" ? "T" : "X"}
+      </div>
+    `;
+
+  });
+
+  document.getElementById("history")
+  .innerHTML = html;
+}
+
+// =========================
+// STATS
+// =========================
+
+function renderStats(){
+
+  let tai =
+  historyData.filter(x=>x === "TÀI").length;
+
+  let xiu =
+  historyData.filter(x=>x === "XỈU").length;
+
+  document.getElementById("stats")
+  .innerHTML = `
+    Tài: ${tai}<br>
+    Xỉu: ${xiu}
+  `;
+}
+
+// =========================
+// MARKOV
+// =========================
+
+function analyzeMarkov(){
+
+  if(historyData.length < 5){
+    return "ĐANG PHÂN TÍCH";
+  }
+
+  let last = historyData[
+    historyData.length - 1
+  ];
+
+  let afterTai = [];
+  let afterXiu = [];
+
+  for(let i=0;i<historyData.length-1;i++){
+
+    if(historyData[i] === "TÀI"){
+      afterTai.push(historyData[i+1]);
+    }
+
+    if(historyData[i] === "XỈU"){
+      afterXiu.push(historyData[i+1]);
+    }
+  }
+
+  let arr = last === "TÀI"
+  ? afterTai
+  : afterXiu;
+
+  let tai =
+  arr.filter(x=>x === "TÀI").length;
+
+  let xiu =
+  arr.filter(x=>x === "XỈU").length;
+
+  return tai > xiu
+  ? "TÀI"
+  : "XỈU";
+}
+
+// =========================
+// DEMO DATA
+// =========================
+
+function createFakeData(){
+
+  let dice1 = rand(1,6);
+  let dice2 = rand(1,6);
+  let dice3 = rand(1,6);
+
+  let total = dice1 + dice2 + dice3;
+
+  return {
+    session: Math.floor(Math.random()*9999999),
+    dice:[dice1,dice2,dice3],
+    total:total,
+    result: total >= 11 ? "TÀI" : "XỈU"
+  };
+}
+
+function rand(min,max){
+  return Math.floor(
+    Math.random()*(max-min+1)
+  ) + min;
+}
+
+// =========================
+// AUTO REFRESH
+// =========================
+
+getData();
+
+setInterval(()=>{
+  getData();
+},5000);
+
+</script>
 </body>
 </html>
