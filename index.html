@@ -448,7 +448,7 @@ function updateUI(data){
   // predict
 
   let next =
-  analyze();
+  analyze(data);
 
   document
   .getElementById("predict")
@@ -499,10 +499,10 @@ ${data.tong}
 }
 
 // ===================
-// AI
+// AI MD5 + CẦU
 // ===================
 
-function analyze(){
+function analyze(data){
 
   // =====================
   // CHƯA ĐỦ DỮ LIỆU
@@ -512,6 +512,19 @@ function analyze(){
 
     return "ĐANG HỌC";
   }
+
+  // =====================
+  // MD5
+  // =====================
+
+  let md5 =
+  (
+    data.md5 ||
+    data.md5_raw ||
+    ""
+  )
+  .toString()
+  .toLowerCase();
 
   // =====================
   // DATA
@@ -541,6 +554,9 @@ function analyze(){
   let p4 =
   last4.join("-");
 
+  let p3 =
+  last3.join("-");
+
   let tai = 0;
   let xiu = 0;
 
@@ -561,10 +577,28 @@ function analyze(){
   });
 
   // =====================
-  // CẦU BỆT 3
+  // MD5 AI
   // =====================
 
-  // T T T
+  let md5Predict = "";
+
+  if(md5.length >= 32){
+
+    let lastHex =
+    parseInt(
+      md5.slice(-1),
+      16
+    );
+
+    md5Predict =
+    lastHex % 2 === 0
+    ? "TÀI"
+    : "XỈU";
+  }
+
+  // =====================
+  // CẦU BỆT 3
+  // =====================
 
   if(
     last3.every(
@@ -572,10 +606,9 @@ function analyze(){
     )
   ){
 
-    return "XỈU";
+    return md5Predict ||
+    "XỈU";
   }
-
-  // X X X
 
   if(
     last3.every(
@@ -583,14 +616,13 @@ function analyze(){
     )
   ){
 
-    return "TÀI";
+    return md5Predict ||
+    "TÀI";
   }
 
   // =====================
   // CẦU 1-1
   // =====================
-
-  // T X T X
 
   if(
     p4===
@@ -599,8 +631,6 @@ function analyze(){
 
     return "TÀI";
   }
-
-  // X T X T
 
   if(
     p4===
@@ -614,8 +644,6 @@ function analyze(){
   // CẦU 2-2
   // =====================
 
-  // T T X X
-
   if(
     p4===
     "tai-tai-xiu-xiu"
@@ -623,8 +651,6 @@ function analyze(){
 
     return "TÀI";
   }
-
-  // X X T T
 
   if(
     p4===
@@ -638,8 +664,6 @@ function analyze(){
   // CẦU 3-3
   // =====================
 
-  // TTTXXX
-
   if(
     p6===
     "tai-tai-tai-xiu-xiu-xiu"
@@ -647,8 +671,6 @@ function analyze(){
 
     return "TÀI";
   }
-
-  // XXXTTT
 
   if(
     p6===
@@ -662,8 +684,6 @@ function analyze(){
   // CẦU 1-2-3
   // =====================
 
-  // T XX TTT
-
   if(
     p6===
     "tai-xiu-xiu-tai-tai-tai"
@@ -671,8 +691,6 @@ function analyze(){
 
     return "XỈU";
   }
-
-  // X TT XXX
 
   if(
     p6===
@@ -686,8 +704,6 @@ function analyze(){
   // CẦU 3-2-1
   // =====================
 
-  // TTT XX T
-
   if(
     p6===
     "tai-tai-tai-xiu-xiu-tai"
@@ -695,8 +711,6 @@ function analyze(){
 
     return "XỈU";
   }
-
-  // XXX TT X
 
   if(
     p6===
@@ -710,8 +724,6 @@ function analyze(){
   // CẦU 2-1-2
   // =====================
 
-  // TT X TT
-
   if(
     p5===
     "tai-tai-xiu-tai-tai"
@@ -719,8 +731,6 @@ function analyze(){
 
     return "XỈU";
   }
-
-  // XX T XX
 
   if(
     p5===
@@ -734,8 +744,6 @@ function analyze(){
   // CẦU KẸP
   // =====================
 
-  // T X X
-
   if(
     p3===
     "tai-xiu-xiu"
@@ -743,8 +751,6 @@ function analyze(){
 
     return "TÀI";
   }
-
-  // X T T
 
   if(
     p3===
@@ -760,16 +766,18 @@ function analyze(){
 
   if(tai >= 7){
 
-    return "XỈU";
+    return md5Predict ||
+    "XỈU";
   }
 
   if(xiu >= 7){
 
-    return "TÀI";
+    return md5Predict ||
+    "TÀI";
   }
 
   // =====================
-  // SOI 2 PHIÊN CUỐI
+  // SOI 2 PHIÊN
   // =====================
 
   let lastOne =
@@ -787,9 +795,20 @@ function analyze(){
     : "TÀI";
   }
 
-  // khác nhau -> theo
+  // =====================
+  // FALLBACK MD5
+  // =====================
 
-  return lastOne==="tai"
+  if(md5Predict){
+
+    return md5Predict;
+  }
+
+  // =====================
+  // RANDOM
+  // =====================
+
+  return Math.random() > 0.5
   ? "TÀI"
   : "XỈU";
 }
