@@ -504,23 +504,49 @@ ${data.tong}
 
 function analyze(){
 
-  // chưa đủ dữ liệu
+  // =====================
+  // CHƯA ĐỦ DỮ LIỆU
+  // =====================
 
-  if(historyData.length < 3){
+  if(historyData.length < 6){
 
     return "ĐANG HỌC";
-
   }
 
-  // lấy 6 phiên gần nhất
+  // =====================
+  // DATA
+  // =====================
 
   let last6 =
   historyData.slice(-6);
 
+  let last5 =
+  historyData.slice(-5);
+
+  let last4 =
+  historyData.slice(-4);
+
+  let last3 =
+  historyData.slice(-3);
+
+  let last2 =
+  historyData.slice(-2);
+
+  let p6 =
+  last6.join("-");
+
+  let p5 =
+  last5.join("-");
+
+  let p4 =
+  last4.join("-");
+
   let tai = 0;
   let xiu = 0;
 
-  last6.forEach(item=>{
+  historyData
+  .slice(-10)
+  .forEach(item=>{
 
     if(item==="tai"){
 
@@ -534,44 +560,236 @@ function analyze(){
 
   });
 
-  // ===== BỆT CẦU =====
+  // =====================
+  // CẦU BỆT 3
+  // =====================
 
-  // tài nhiều -> theo tài
+  // T T T
 
-  if(tai >= 4){
-
-    return "TÀI";
-
-  }
-
-  // xỉu nhiều -> theo xỉu
-
-  if(xiu >= 4){
+  if(
+    last3.every(
+      x=>x==="tai"
+    )
+  ){
 
     return "XỈU";
-
   }
 
-  // ===== CẦU 1-1 =====
+  // X X X
 
-  let last1 =
-  last6[last6.length-1];
+  if(
+    last3.every(
+      x=>x==="xiu"
+    )
+  ){
 
-  let last2 =
-  last6[last6.length-2];
+    return "TÀI";
+  }
 
-  // đảo nếu 1-1
+  // =====================
+  // CẦU 1-1
+  // =====================
 
-  if(last1 !== last2){
+  // T X T X
 
-    return last1==="tai"
+  if(
+    p4===
+    "tai-xiu-tai-xiu"
+  ){
+
+    return "TÀI";
+  }
+
+  // X T X T
+
+  if(
+    p4===
+    "xiu-tai-xiu-tai"
+  ){
+
+    return "XỈU";
+  }
+
+  // =====================
+  // CẦU 2-2
+  // =====================
+
+  // T T X X
+
+  if(
+    p4===
+    "tai-tai-xiu-xiu"
+  ){
+
+    return "TÀI";
+  }
+
+  // X X T T
+
+  if(
+    p4===
+    "xiu-xiu-tai-tai"
+  ){
+
+    return "XỈU";
+  }
+
+  // =====================
+  // CẦU 3-3
+  // =====================
+
+  // TTTXXX
+
+  if(
+    p6===
+    "tai-tai-tai-xiu-xiu-xiu"
+  ){
+
+    return "TÀI";
+  }
+
+  // XXXTTT
+
+  if(
+    p6===
+    "xiu-xiu-xiu-tai-tai-tai"
+  ){
+
+    return "XỈU";
+  }
+
+  // =====================
+  // CẦU 1-2-3
+  // =====================
+
+  // T XX TTT
+
+  if(
+    p6===
+    "tai-xiu-xiu-tai-tai-tai"
+  ){
+
+    return "XỈU";
+  }
+
+  // X TT XXX
+
+  if(
+    p6===
+    "xiu-tai-tai-xiu-xiu-xiu"
+  ){
+
+    return "TÀI";
+  }
+
+  // =====================
+  // CẦU 3-2-1
+  // =====================
+
+  // TTT XX T
+
+  if(
+    p6===
+    "tai-tai-tai-xiu-xiu-tai"
+  ){
+
+    return "XỈU";
+  }
+
+  // XXX TT X
+
+  if(
+    p6===
+    "xiu-xiu-xiu-tai-tai-xiu"
+  ){
+
+    return "TÀI";
+  }
+
+  // =====================
+  // CẦU 2-1-2
+  // =====================
+
+  // TT X TT
+
+  if(
+    p5===
+    "tai-tai-xiu-tai-tai"
+  ){
+
+    return "XỈU";
+  }
+
+  // XX T XX
+
+  if(
+    p5===
+    "xiu-xiu-tai-xiu-xiu"
+  ){
+
+    return "TÀI";
+  }
+
+  // =====================
+  // CẦU KẸP
+  // =====================
+
+  // T X X
+
+  if(
+    p3===
+    "tai-xiu-xiu"
+  ){
+
+    return "TÀI";
+  }
+
+  // X T T
+
+  if(
+    p3===
+    "xiu-tai-tai"
+  ){
+
+    return "XỈU";
+  }
+
+  // =====================
+  // THỐNG KÊ NGHIÊNG
+  // =====================
+
+  if(tai >= 7){
+
+    return "XỈU";
+  }
+
+  if(xiu >= 7){
+
+    return "TÀI";
+  }
+
+  // =====================
+  // SOI 2 PHIÊN CUỐI
+  // =====================
+
+  let lastOne =
+  last2[1];
+
+  let beforeOne =
+  last2[0];
+
+  // giống nhau -> đảo
+
+  if(lastOne===beforeOne){
+
+    return lastOne==="tai"
     ? "XỈU"
     : "TÀI";
   }
 
-  // ===== MẶC ĐỊNH =====
+  // khác nhau -> theo
 
-  return tai >= xiu
+  return lastOne==="tai"
   ? "TÀI"
   : "XỈU";
 }
