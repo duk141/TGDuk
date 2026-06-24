@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Markov Multi-Layer Analyzer</title>
+<title>Markov + Road Analyzer</title>
 
 <style>
 body{
@@ -23,7 +23,7 @@ h1{text-align:center;}
 
 .card{
     background:rgba(255,255,255,0.08);
-    backdrop-filter: blur(12px);
+    backdrop-filter:blur(12px);
     border:1px solid rgba(255,255,255,0.1);
     border-radius:16px;
     padding:15px;
@@ -48,23 +48,6 @@ button{
 .p{background:#3b82f6;color:#fff;}
 .t{background:#10b981;color:#fff;}
 .gray{background:#6b7280;color:#fff;}
-
-.tabs{
-    display:flex;
-    gap:10px;
-    margin-bottom:10px;
-}
-
-.tab{
-    padding:8px 12px;
-    border-radius:10px;
-    background:#374151;
-    cursor:pointer;
-}
-
-.tab.active{
-    background:#6366f1;
-}
 
 .road{
     display:grid;
@@ -100,7 +83,7 @@ td,th{
 
 <div class="container">
 
-<h1>📊 Markov Multi-Layer (1–3)</h1>
+<h1>📊 Markov + Road Analyzer PRO</h1>
 
 <div class="card">
 <div class="buttons">
@@ -123,15 +106,12 @@ td,th{
 </div>
 
 <div class="card">
-
-<h3>📈 Markov Layers</h3>
-
-<div class="tabs">
-<div class="tab active" onclick="setLayer(1)">Layer 1</div>
-<div class="tab" onclick="setLayer(2)">Layer 2</div>
-<div class="tab" onclick="setLayer(3)">Layer 3</div>
+<h3>📊 Phân tích cầu</h3>
+<div id="roadAnalysis">Chưa có dữ liệu</div>
 </div>
 
+<div class="card">
+<h3>📈 Markov bậc 1</h3>
 <table>
 <thead>
 <tr>
@@ -143,18 +123,16 @@ td,th{
 </thead>
 <tbody id="matrix"></tbody>
 </table>
-
 </div>
 
 </div>
 
 <script>
 
-let data = JSON.parse(localStorage.getItem("markov_multi")) || [];
-let layer = 1;
+let data = JSON.parse(localStorage.getItem("data_markov_road")) || [];
 
 function save(){
-    localStorage.setItem("markov_multi", JSON.stringify(data));
+    localStorage.setItem("data_markov_road", JSON.stringify(data));
 }
 
 function add(v){
@@ -177,15 +155,26 @@ function clearAll(){
     }
 }
 
-function setLayer(l){
-    layer = l;
-    document.querySelectorAll(".tab").forEach((t,i)=>{
-        t.classList.toggle("active", i===l-1);
-    });
-    render();
+function renderHistory(){
+    document.getElementById("history").innerText = data.join(" ");
 }
 
-function buildMatrix(order){
+function renderRoad(){
+
+    let el = document.getElementById("road");
+    el.innerHTML = "";
+
+    data.forEach(v=>{
+        let d = document.createElement("div");
+        d.className = "dot " + v;
+        el.appendChild(d);
+    });
+}
+
+/* =========================
+   MARKOV 1
+========================= */
+function buildMatrix(){
 
     let states = ["B","P","T"];
     let m = {};
@@ -197,9 +186,9 @@ function buildMatrix(order){
         }
     }
 
-    for(let i=0;i<data.length-order;i++){
+    for(let i=0;i<data.length-1;i++){
         let from = data[i];
-        let to = data[i+order];
+        let to = data[i+1];
 
         if(m[from] && m[from][to] !== undefined){
             m[from][to]++;
@@ -219,9 +208,63 @@ function normalize(row){
     return out;
 }
 
+/* =========================
+   CẦU DETECT
+========================= */
+function detectRoad(){
+
+    if(data.length < 3){
+        return null;
+    }
+
+    let last = data[data.length - 1];
+    let streak = 1;
+
+    for(let i=data.length-2;i>=0;i--){
+        if(data[i] === last) streak++;
+        else break;
+    }
+
+    // pattern
+    let pattern = "none";
+
+    let last5 = data.slice(-5).join("");
+
+    if(last5 === "BPBPB" || last5 === "PBPBP"){
+        pattern = "zigzag";
+    }
+
+    if(streak >= 4){
+        pattern = "streak";
+    }
+
+    // volatility
+    let changes = 0;
+    for(let i=1;i<data.length;i++){
+        if(data[i] !== data[i-1]) changes++;
+    }
+
+    let volatility = changes / data.length;
+
+    let score =
+        (streak * 12) +
+        ((1 - volatility) * 40) +
+        (pattern === "zigzag" ? 20 : 0);
+
+    return {
+        last,
+        streak,
+        pattern,
+        score: Math.min(100, Math.round(score))
+    };
+}
+
+/* =========================
+   RENDER
+========================= */
 function renderMatrix(){
 
-    let m = buildMatrix(layer);
+    let m = buildMatrix();
 
     let html = "";
 
@@ -242,27 +285,31 @@ function renderMatrix(){
     document.getElementById("matrix").innerHTML = html;
 }
 
-function renderHistory(){
-    document.getElementById("history").innerText = data.join(" ");
-}
+function renderRoadAnalysis(){
 
-function renderRoad(){
+    let a = detectRoad();
 
-    let el = document.getElementById("road");
-    el.innerHTML = "";
+    if(!a){
+        document.getElementById("roadAnalysis").innerHTML =
+        "Chưa đủ dữ liệu";
+        return;
+    }
 
-    data.forEach(v=>{
-        let d = document.createElement("div");
-        d.className = "dot " + v;
-        el.appendChild(d);
-    });
-
+    document.getElementById("roadAnalysis").innerHTML = `
+        🔥 Kết quả gần nhất: <b>${a.last}</b><br>
+        📊 Streak: <b>${a.streak}</b><br>
+        🔁 Pattern: <b>${a.pattern}</b><br>
+        ⚡ Điểm cầu: <b>${a.score}/100</b>
+    `;
 }
 
 function render(){
+
     renderHistory();
     renderRoad();
     renderMatrix();
+    renderRoadAnalysis();
+
 }
 
 render();
