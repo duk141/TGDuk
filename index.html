@@ -1,1082 +1,271 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport"
-content="width=device-width, initial-scale=1.0">
-
-<title>TX FLOAT</title>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Markov Multi-Layer Analyzer</title>
 
 <style>
-
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-  font-family:Arial;
-}
-
 body{
-  overflow:hidden;
-  background:#111;
+    margin:0;
+    font-family:Segoe UI;
+    background:radial-gradient(circle at top,#1f2937,#0b1220);
+    color:white;
 }
 
-/* GAME */
-
-#game{
-  position:fixed;
-  inset:0;
-  width:100%;
-  height:100%;
-  border:none;
+.container{
+    max-width:1100px;
+    margin:auto;
+    padding:20px;
 }
 
-/* FLOAT MENU */
+h1{text-align:center;}
 
-#menu{
-
-  position:fixed;
-
-  top:100px;
-  left:10px;
-
-  width:170px;
-
-  background:#ffc400;
-
-  border:2px solid #111;
-
-  border-radius:16px;
-
-  padding:10px;
-
-  z-index:99999;
-
-  box-shadow:
-  0 4px 10px rgba(0,0,0,.4);
-
-  user-select:none;
-
-  touch-action:none;
+.card{
+    background:rgba(255,255,255,0.08);
+    backdrop-filter: blur(12px);
+    border:1px solid rgba(255,255,255,0.1);
+    border-radius:16px;
+    padding:15px;
+    margin-bottom:15px;
 }
 
-/* HEADER */
-
-.header{
-
-  display:flex;
-
-  justify-content:space-between;
-
-  align-items:center;
-
-  font-size:16px;
-
-  font-weight:bold;
-
-  margin-bottom:8px;
-
-  cursor:move;
+.buttons{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
 }
 
-/* RESULT */
-
-.result{
-
-  text-align:center;
-
-  font-size:24px;
-
-  font-weight:bold;
-
-  margin:8px 0;
-
-  color:#111;
+button{
+    padding:10px 14px;
+    border:none;
+    border-radius:10px;
+    font-weight:bold;
+    cursor:pointer;
 }
 
-/* PREDICT */
+.b{background:#ef4444;color:#fff;}
+.p{background:#3b82f6;color:#fff;}
+.t{background:#10b981;color:#fff;}
+.gray{background:#6b7280;color:#fff;}
 
-.predict{
-
-  background:#111;
-
-  color:#00ff90;
-
-  padding:10px;
-
-  border-radius:10px;
-
-  text-align:center;
-
-  font-size:15px;
-
-  font-weight:bold;
-
-  min-height:45px;
-
-  display:flex;
-
-  align-items:center;
-
-  justify-content:center;
-
-  white-space:nowrap;
-
-  overflow:hidden;
-
-  box-shadow:
-  0 0 10px #00ff90;
+.tabs{
+    display:flex;
+    gap:10px;
+    margin-bottom:10px;
 }
 
-/* BUTTON */
-
-.btn{
-
-  width:100%;
-
-  border:none;
-
-  border-radius:10px;
-
-  height:36px;
-
-  margin-top:8px;
-
-  font-size:13px;
-
-  font-weight:bold;
+.tab{
+    padding:8px 12px;
+    border-radius:10px;
+    background:#374151;
+    cursor:pointer;
 }
 
-.open{
-  background:#00c853;
-  color:white;
+.tab.active{
+    background:#6366f1;
 }
 
-.hide{
-  background:#ff3b30;
-  color:white;
+.road{
+    display:grid;
+    grid-template-columns:repeat(20,1fr);
+    gap:4px;
 }
 
-/* INFO */
-
-.info{
-
-  margin-top:8px;
-
-  background:white;
-
-  border-radius:10px;
-
-  padding:6px;
-
-  color:#111;
-
-  font-size:12px;
-
-  line-height:1.5;
+.dot{
+    width:18px;
+    height:18px;
+    border-radius:50%;
 }
 
-/* HISTORY */
+.B{background:#ef4444;}
+.P{background:#3b82f6;}
+.T{background:#10b981;}
 
-.history{
-
-  display:flex;
-
-  flex-wrap:wrap;
-
-  gap:4px;
-
-  margin-top:8px;
+table{
+    width:100%;
+    border-collapse:collapse;
 }
 
-.item{
-
-  width:24px;
-  height:24px;
-
-  border-radius:50%;
-
-  display:flex;
-
-  align-items:center;
-
-  justify-content:center;
-
-  color:white;
-
-  font-size:12px;
-
-  font-weight:bold;
-}
-
-.tai{
-  background:#ff3b30;
-}
-
-.xiu{
-  background:#007aff;
-}
-
-/* LOGO OPEN */
-
-#openMenu{
-
-  position:fixed;
-
-  right:15px;
-  bottom:80px;
-
-  width:50px;
-  height:50px;
-
-  border-radius:50%;
-
-  background:#ffc400;
-
-  color:#111;
-
-  font-size:24px;
-
-  font-weight:bold;
-
-  display:none;
-
-  align-items:center;
-
-  justify-content:center;
-
-  z-index:999999;
-
-  box-shadow:
-  0 0 15px #ffc400;
-
-  animation:
-  pulse 1s infinite;
-}
-
-@keyframes pulse{
-
-  0%{
-    transform:scale(1);
-  }
-
-  50%{
-    transform:scale(1.1);
-  }
-
-  100%{
-    transform:scale(1);
-  }
+td,th{
+    border:1px solid rgba(255,255,255,0.2);
+    padding:8px;
+    text-align:center;
 }
 </style>
+
 </head>
+
 <body>
 
-<!-- GAME -->
+<div class="container">
 
-<iframe
-id="game"
-src="https://play.sum.vin/">
-</iframe>
+<h1>📊 Markov Multi-Layer (1–3)</h1>
 
-<!-- FLOAT -->
+<div class="card">
+<div class="buttons">
+<button class="b" onclick="add('B')">Banker</button>
+<button class="p" onclick="add('P')">Player</button>
+<button class="t" onclick="add('T')">Tie</button>
+<button class="gray" onclick="undo()">Undo</button>
+<button class="gray" onclick="clearAll()">Clear</button>
+</div>
+</div>
 
-<div id="menu">
+<div class="card">
+<h3>📜 History</h3>
+<div id="history"></div>
+</div>
 
-  <div class="header">
+<div class="card">
+<h3>🔥 Road Map</h3>
+<div id="road" class="road"></div>
+</div>
 
-    <span id="session">
-      #0000
-    </span>
+<div class="card">
 
-    <span onclick="hideFloat()">
-      ✕
-    </span>
+<h3>📈 Markov Layers</h3>
 
-  </div>
+<div class="tabs">
+<div class="tab active" onclick="setLayer(1)">Layer 1</div>
+<div class="tab" onclick="setLayer(2)">Layer 2</div>
+<div class="tab" onclick="setLayer(3)">Layer 3</div>
+</div>
 
-  <div class="result"
-  id="result">
-    ...
-  </div>
-
-  <div class="predict"
-  id="predict">
-    ĐANG PHÂN TÍCH
-  </div>
-
-  <button
-  class="btn open"
-  onclick="location.reload()">
-
-    REFRESH
-
-  </button>
-
-  <button
-  class="btn hide"
-  onclick="hideFloat()">
-
-    ẨN MENU
-
-  </button>
-
-  <div class="info"
-  id="info">
-
-    ĐANG TẢI...
-
-  </div>
-  
-<!-- LOGO OPEN -->
-
-<div id="openMenu"
-onclick="showFloat()">
-
-⚡
+<table>
+<thead>
+<tr>
+<th>From</th>
+<th>B</th>
+<th>P</th>
+<th>T</th>
+</tr>
+</thead>
+<tbody id="matrix"></tbody>
+</table>
 
 </div>
+
+</div>
+
 <script>
 
-// ===================
-// API
-// ===================
+let data = JSON.parse(localStorage.getItem("markov_multi")) || [];
+let layer = 1;
 
-const API =
-"https://corsproxy.io/?https://cricket-compressed-list-suppose.trycloudflare.com/api/md5";
-// ===================
-// DATA
-// ===================
-
-let historyData =
-JSON.parse(
-localStorage.getItem("tx")
-) || [];
-
-let lastSession = "";
-
-// ===================
-// NORMALIZE
-// ===================
-
-function normalizeResult(text){
-
-  if(!text) return "";
-
-  text = text
-  .toString()
-  .trim()
-  .toLowerCase();
-
-  if(
-    text.includes("tài")
-    || text.includes("tai")
-  ){
-    return "tai";
-  }
-
-  return "xiu";
+function save(){
+    localStorage.setItem("markov_multi", JSON.stringify(data));
 }
 
-// ===================
-// GET API
-// ===================
+function add(v){
+    data.push(v);
+    save();
+    render();
+}
 
-async function getData(){
+function undo(){
+    data.pop();
+    save();
+    render();
+}
 
-  try{
+function clearAll(){
+    if(confirm("Clear all?")){
+        data = [];
+        save();
+        render();
+    }
+}
 
-    let res =
-    await fetch(API,{
+function setLayer(l){
+    layer = l;
+    document.querySelectorAll(".tab").forEach((t,i)=>{
+        t.classList.toggle("active", i===l-1);
+    });
+    render();
+}
 
-      method:"GET",
+function buildMatrix(order){
 
-      cache:"no-cache",
+    let states = ["B","P","T"];
+    let m = {};
 
-      headers:{
-        "Accept":"application/json"
-      }
+    for(let a of states){
+        m[a] = {};
+        for(let b of states){
+            m[a][b] = 0;
+        }
+    }
 
+    for(let i=0;i<data.length-order;i++){
+        let from = data[i];
+        let to = data[i+order];
+
+        if(m[from] && m[from][to] !== undefined){
+            m[from][to]++;
+        }
+    }
+
+    return m;
+}
+
+function normalize(row){
+    let sum = Object.values(row).reduce((a,b)=>a+b,0);
+
+    let out = {};
+    for(let k in row){
+        out[k] = sum ? ((row[k]/sum)*100).toFixed(1)+"%" : "0%";
+    }
+    return out;
+}
+
+function renderMatrix(){
+
+    let m = buildMatrix(layer);
+
+    let html = "";
+
+    for(let from of ["B","P","T"]){
+
+        let n = normalize(m[from]);
+
+        html += `
+        <tr>
+            <td>${from}</td>
+            <td>${n.B}</td>
+            <td>${n.P}</td>
+            <td>${n.T}</td>
+        </tr>
+        `;
+    }
+
+    document.getElementById("matrix").innerHTML = html;
+}
+
+function renderHistory(){
+    document.getElementById("history").innerText = data.join(" ");
+}
+
+function renderRoad(){
+
+    let el = document.getElementById("road");
+    el.innerHTML = "";
+
+    data.forEach(v=>{
+        let d = document.createElement("div");
+        d.className = "dot " + v;
+        el.appendChild(d);
     });
 
-    // check api
-
-    if(!res.ok){
-
-      throw new Error(
-        "API ERROR"
-      );
-
-    }
-
-    let data =
-    await res.json();
-
-    console.log(data);
-
-    // check data
-
-    if(
-      !data
-      || !data.phien
-    ){
-      return;
-    }
-
-    // fix string
-
-    let currentSession =
-    String(data.phien);
-
-    // chống trùng phiên
-
-    if(
-      currentSession
-      === lastSession
-    ){
-      return;
-    }
-
-    lastSession =
-    currentSession;
-
-    updateUI(data);
-
-  }catch(err){
-
-    console.log(
-      "API ERROR:",
-      err
-    );
-
-    document
-    .getElementById("predict")
-    .innerHTML =
-    "LỖI API";
-  }
 }
 
-// ===================
-// UPDATE UI
-// ===================
-
-function updateUI(data){
-
-  // SESSION
-
-  document
-  .getElementById("session")
-  .innerHTML =
-  "#" + data.phien;
-
-  // RESULT
-
-  let result =
-  normalizeResult(
-    data.ket_qua
-  );
-
-  document
-  .getElementById("result")
-  .innerHTML =
-  result==="tai"
-  ? "TÀI"
-  : "XỈU";
-
-  // HISTORY
-
-  historyData.push(result);
-
-  // max 20
-
-  if(historyData.length > 20){
-
-    historyData.shift();
-
-  }
-
-  // save local
-
-  localStorage.setItem(
-    "tx",
-    JSON.stringify(historyData)
-  );
-
-  // render
-
-  // predict
-
-  let next =
-  analyze(data);
-
-  document
-  .getElementById("predict")
-  .innerHTML =
-  "DỰ ĐOÁN "
-  + next;
-
-  // INFO
-
-  let taiPlayer =
-  data.total_tai
-  || data.betting_info?.nguoi_cuoc?.tai
-  || 0;
-
-  let xiuPlayer =
-  data.total_xiu
-  || data.betting_info?.nguoi_cuoc?.xiu
-  || 0;
-
-  let taiMoney =
-  data.total_bet_tai
-  || data.betting_info?.tien_cuoc?.tai
-  || 0;
-
-  let xiuMoney =
-  data.total_bet_xiu
-  || data.betting_info?.tien_cuoc?.xiu
-  || 0;
-
-document
-.getElementById("info")
-.innerHTML = `
-
-🎲 ${data.xuc_xac_1}
-- ${data.xuc_xac_2}
-- ${data.xuc_xac_3}
-
-<br>
-
-Tổng:
-${data.tong}
-
-<br>
-
-🕒 ${data.update_at}
-
-`;
+function render(){
+    renderHistory();
+    renderRoad();
+    renderMatrix();
 }
 
-// ===================
-// AI MD5 + CẦU
-// ===================
-
-function analyze(data){
-
-  // =====================
-  // CHƯA ĐỦ DỮ LIỆU
-  // =====================
-
-  if(historyData.length < 6){
-
-    return "ĐANG HỌC";
-  }
-
-  // =====================
-  // MD5
-  // =====================
-
-  let md5 =
-  (
-    data.md5 ||
-    data.md5_raw ||
-    ""
-  )
-  .toString()
-  .toLowerCase();
-
-  // =====================
-  // DATA
-  // =====================
-
-  let last6 =
-  historyData.slice(-6);
-
-  let last5 =
-  historyData.slice(-5);
-
-  let last4 =
-  historyData.slice(-4);
-
-  let last3 =
-  historyData.slice(-3);
-
-  let last2 =
-  historyData.slice(-2);
-
-  let p6 =
-  last6.join("-");
-
-  let p5 =
-  last5.join("-");
-
-  let p4 =
-  last4.join("-");
-
-  let p3 =
-  last3.join("-");
-
-  let tai = 0;
-  let xiu = 0;
-
-  historyData
-  .slice(-10)
-  .forEach(item=>{
-
-    if(item==="tai"){
-
-      tai++;
-
-    }else{
-
-      xiu++;
-
-    }
-
-  });
-
-  // =====================
-  // MD5 AI
-  // =====================
-
-  let md5Predict = "";
-
-  if(md5.length >= 32){
-
-    let lastHex =
-    parseInt(
-      md5.slice(-1),
-      16
-    );
-
-    md5Predict =
-    lastHex % 2 === 0
-    ? "TÀI"
-    : "XỈU";
-  }
-
-  // =====================
-// NHẬN BIẾT BỆT DÀI
-// =====================
-
-let streak = 1;
-
-for(
-  let i =
-  historyData.length - 1;
-
-  i > 0;
-
-  i--
-){
-
-  if(
-    historyData[i]
-    ===
-    historyData[i-1]
-  ){
-
-    streak++;
-
-  }else{
-
-    break;
-  }
-}
-
-// ===== BỆT 4 =====
-
-if(streak >= 4){
-
-  let current =
-  historyData[
-    historyData.length-1
-  ];
-
-  // bệt quá dài -> đảo
-
-  return current==="tai"
-  ? "XỈU"
-  : "TÀI";
-}
-
-// ===== BỆT 2 =====
-
-if(streak===2){
-
-  let current =
-  historyData[
-    historyData.length-1
-  ];
-
-  // theo cầu
-
-  return current==="tai"
-  ? "TÀI"
-  : "XỈU";
-}
-
-// ===== BỆT 3 =====
-
-if(streak===3){
-
-  let current =
-  historyData[
-    historyData.length-1
-  ];
-
-  // đảo nhẹ
-
-  return current==="tai"
-  ? "XỈU"
-  : "TÀI";
-}
-
-  // =====================
-  // CẦU BỆT 3
-  // =====================
-
-  if(
-    last3.every(
-      x=>x==="tai"
-    )
-  ){
-
-    return md5Predict ||
-    "XỈU";
-  }
-
-  if(
-    last3.every(
-      x=>x==="xiu"
-    )
-  ){
-
-    return md5Predict ||
-    "TÀI";
-  }
-
-  // =====================
-  // CẦU 1-1
-  // =====================
-
-  if(
-    p4===
-    "tai-xiu-tai-xiu"
-  ){
-
-    return "TÀI";
-  }
-
-  if(
-    p4===
-    "xiu-tai-xiu-tai"
-  ){
-
-    return "XỈU";
-  }
-
-  // =====================
-  // CẦU 2-2
-  // =====================
-
-  if(
-    p4===
-    "tai-tai-xiu-xiu"
-  ){
-
-    return "TÀI";
-  }
-
-  if(
-    p4===
-    "xiu-xiu-tai-tai"
-  ){
-
-    return "XỈU";
-  }
-
-  // =====================
-  // CẦU 3-3
-  // =====================
-
-  if(
-    p6===
-    "tai-tai-tai-xiu-xiu-xiu"
-  ){
-
-    return "TÀI";
-  }
-
-  if(
-    p6===
-    "xiu-xiu-xiu-tai-tai-tai"
-  ){
-
-    return "XỈU";
-  }
-
-  // =====================
-  // CẦU 1-2-3
-  // =====================
-
-  if(
-    p6===
-    "tai-xiu-xiu-tai-tai-tai"
-  ){
-
-    return "XỈU";
-  }
-
-  if(
-    p6===
-    "xiu-tai-tai-xiu-xiu-xiu"
-  ){
-
-    return "TÀI";
-  }
-
-  // =====================
-  // CẦU 3-2-1
-  // =====================
-
-  if(
-    p6===
-    "tai-tai-tai-xiu-xiu-tai"
-  ){
-
-    return "XỈU";
-  }
-
-  if(
-    p6===
-    "xiu-xiu-xiu-tai-tai-xiu"
-  ){
-
-    return "TÀI";
-  }
-
-  // =====================
-  // CẦU 2-1-2
-  // =====================
-
-  if(
-    p5===
-    "tai-tai-xiu-tai-tai"
-  ){
-
-    return "XỈU";
-  }
-
-  if(
-    p5===
-    "xiu-xiu-tai-xiu-xiu"
-  ){
-
-    return "TÀI";
-  }
-
-  // =====================
-  // CẦU KẸP
-  // =====================
-
-  if(
-    p3===
-    "tai-xiu-xiu"
-  ){
-
-    return "TÀI";
-  }
-
-  if(
-    p3===
-    "xiu-tai-tai"
-  ){
-
-    return "XỈU";
-  }
-
-  // =====================
-  // THỐNG KÊ NGHIÊNG
-  // =====================
-
-  if(tai >= 7){
-
-    return md5Predict ||
-    "XỈU";
-  }
-
-  if(xiu >= 7){
-
-    return md5Predict ||
-    "TÀI";
-  }
-
-  // =====================
-  // SOI 2 PHIÊN
-  // =====================
-
-  let lastOne =
-  last2[1];
-
-  let beforeOne =
-  last2[0];
-
-  // giống nhau -> đảo
-
-  if(lastOne===beforeOne){
-
-    return lastOne==="tai"
-    ? "XỈU"
-    : "TÀI";
-  }
-
-  // =====================
-  // FALLBACK MD5
-  // =====================
-
-  if(md5Predict){
-
-    return md5Predict;
-  }
-
-  // =====================
-  // RANDOM
-  // =====================
-
-  return Math.random() > 0.5
-  ? "TÀI"
-  : "XỈU";
-}
-
-// ===================
-// HIDE
-// ===================
-
-function hideFloat(){
-
-  document
-  .getElementById("menu")
-  .style.display =
-  "none";
-
-  document
-  .getElementById("openMenu")
-  .style.display =
-  "flex";
-}
-
-// ===================
-// DRAG
-// ===================
-
-const menu =
-document.getElementById("menu");
-
-let isDragging = false;
-
-let offsetX = 0;
-let offsetY = 0;
-
-// MOBILE
-
-menu.addEventListener(
-"touchstart",
-e=>{
-
-  isDragging = true;
-
-  offsetX =
-  e.touches[0].clientX
-  - menu.offsetLeft;
-
-  offsetY =
-  e.touches[0].clientY
-  - menu.offsetTop;
-});
-
-document.addEventListener(
-"touchmove",
-e=>{
-
-  if(!isDragging) return;
-
-  menu.style.left =
-  (
-    e.touches[0].clientX
-    - offsetX
-  ) + "px";
-
-  menu.style.top =
-  (
-    e.touches[0].clientY
-    - offsetY
-  ) + "px";
-});
-
-document.addEventListener(
-"touchend",
-()=>{
-
-  isDragging = false;
-
-});
-
-// PC
-
-menu.addEventListener(
-"mousedown",
-e=>{
-
-  isDragging = true;
-
-  offsetX =
-  e.clientX
-  - menu.offsetLeft;
-
-  offsetY =
-  e.clientY
-  - menu.offsetTop;
-});
-
-document.addEventListener(
-"mousemove",
-e=>{
-
-  if(!isDragging) return;
-
-  menu.style.left =
-  (
-    e.clientX
-    - offsetX
-  ) + "px";
-
-  menu.style.top =
-  (
-    e.clientY
-    - offsetY
-  ) + "px";
-});
-
-document.addEventListener(
-"mouseup",
-()=>{
-
-  isDragging = false;
-
-});
-
-// ===================
-// AUTO
-// ===================
-
-getData();
-
-setInterval(()=>{
-
-  getData();
-
-},3000);
+render();
 
 </script>
 
