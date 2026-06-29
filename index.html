@@ -1,1 +1,101 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Dự đoán Tài Xỉu</title>
+<style>
+body{
+    font-family:Arial;
+    background:#f4f4f4;
+    text-align:center;
+    padding:30px;
+}
+.container{
+    background:#fff;
+    width:500px;
+    margin:auto;
+    padding:20px;
+    border-radius:10px;
+    box-shadow:0 0 10px rgba(0,0,0,.2);
+}
+input{
+    width:90%;
+    padding:10px;
+    margin:10px;
+}
+button{
+    padding:10px 20px;
+    cursor:pointer;
+}
+.result{
+    margin-top:20px;
+    font-size:22px;
+    font-weight:bold;
+}
+</style>
+</head>
+<body>
 
+<div class="container">
+<h2>Dự Đoán Tài Xỉu</h2>
+
+<p>Nhập kết quả các phiên gần nhất (T hoặc X)</p>
+
+<input id="history" placeholder="Ví dụ: T,X,T,T,X,X,T">
+
+<br>
+
+<button onclick="predict()">Dự đoán</button>
+
+<div class="result" id="result"></div>
+
+</div>
+
+<script>
+function predict(){
+
+    let input = document.getElementById("history").value.toUpperCase();
+
+    let arr = input.split(",").map(x=>x.trim());
+
+    if(arr.length < 3){
+        document.getElementById("result").innerHTML =
+        "Cần ít nhất 3 phiên.";
+        return;
+    }
+
+    let tai = 0;
+    let xiu = 0;
+
+    arr.forEach(v=>{
+        if(v=="T") tai++;
+        if(v=="X") xiu++;
+    });
+
+    let last3 = arr.slice(-3);
+
+    let prediction = "";
+
+    if(last3.every(v=>v=="T")){
+        prediction = "XỈU (do chuỗi Tài dài)";
+    }
+    else if(last3.every(v=>v=="X")){
+        prediction = "TÀI (do chuỗi Xỉu dài)";
+    }
+    else if(tai > xiu){
+        prediction = "TÀI";
+    }
+    else if(xiu > tai){
+        prediction = "XỈU";
+    }
+    else{
+        prediction = Math.random()>0.5 ? "TÀI" : "XỈU";
+    }
+
+    document.getElementById("result").innerHTML =
+    "Dự đoán phiên tiếp theo: <br><span style='color:red'>" + prediction + "</span>";
+}
+</script>
+
+</body>
+</html>
