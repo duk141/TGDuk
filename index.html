@@ -62,21 +62,10 @@ button{
 let history = [];
 
 // =====================
-// 🧠 NEURAL WEIGHTS
+// ➕ ADD NUMBER (3-18)
 // =====================
-let weights = {
-    streak: Math.random(),
-    balance: Math.random(),
-    transition: Math.random()
-};
-
-let bias = Math.random();
-
-// =====================
-// ➕ ADD
-// =====================
-function add(v){
-    history.push(v);
+function add(num){
+    history.push(num);
     train();
     predict();
 }
@@ -90,30 +79,31 @@ function undo(){
 }
 
 // =====================
-// 🧠 ANALYZE
+// 📊 ANALYZE
 // =====================
 function analyze(arr){
 
     let result = {
-        tai:0,
-        xiu:0,
-        streak:0,
-        streakType:"",
-        longest:0,
-        pattern:"",
-        score:0,
-        prediction:""
+        avg:0,
+        min:0,
+        max:0,
+        longestStreak:0,
+        currentStreak:0,
+        streakValue:0,
+        hotZone:"",
+        features:{}
     };
 
     if(arr.length === 0) return result;
 
-    // 📊 đếm
-    arr.forEach(v=>{
-        if(v==="T") result.tai++;
-        if(v==="X") result.xiu++;
-    });
+    // 📊 avg
+    let sum = arr.reduce((a,b)=>a+b,0);
+    result.avg = sum / arr.length;
 
-    // 🔥 chuỗi hiện tại
+    result.min = Math.min(...arr);
+    result.max = Math.max(...arr);
+
+    // 🔥 current streak
     let last = arr[arr.length-1];
     let c=1;
 
@@ -122,10 +112,10 @@ function analyze(arr){
         else break;
     }
 
-    result.streak = c;
-    result.streakType = last;
+    result.currentStreak = c;
+    result.streakValue = last;
 
-    // 📈 longest
+    // 📈 longest streak
     let m=1,t=1;
     for(let i=1;i<arr.length;i++){
         if(arr[i]===arr[i-1]){
@@ -134,38 +124,59 @@ function analyze(arr){
         }else t=1;
     }
 
-    result.longest = m;
+    result.longestStreak = m;
 
-    // 🧠 feature score
-    let balance = Math.abs(result.tai - result.xiu) / (arr.length || 1);
+    // 🔥 hot zone (range)
+    let low=0, mid=0, high=0;
 
-    let transition = 0;
-    for(let i=1;i<arr.length;i++){
-        if(arr[i]!==arr[i-1]) transition++;
-    }
-    transition = transition / (arr.length || 1);
+    arr.forEach(v=>{
+        if(v<=9) low++;
+        else if(v<=13) mid++;
+        else high++;
+    });
 
+    if(low>mid && low>high) result.hotZone="LOW (3-9)";
+    else if(mid>low && mid>high) result.hotZone="MID (10-13)";
+    else result.hotZone="HIGH (14-18)";
+
+    // features for AI
     result.features = {
-        streak: result.streak / 10,
-        balance: balance,
-        transition: transition
+        avg: result.avg/18,
+        streak: result.currentStreak/10,
+        volatility: (result.max - result.min)/18
     };
 
     return result;
 }
 
 // =====================
-// 🤖 NEURAL PREDICT
+// 🤖 NEURAL NETWORK
 // =====================
-function neuralOutput(features){
+let weights = {
+    avg: Math.random(),
+    streak: Math.random(),
+    volatility: Math.random()
+};
 
-    let sum =
-        features.streak * weights.streak +
-        features.balance * weights.balance +
-        features.transition * weights.transition +
+let bias = Math.random();
+
+// sigmoid
+function sigmoid(x){
+    return 1 / (1 + Math.exp(-x));
+}
+
+// =====================
+// 🧠 PREDICT NUMBER
+// =====================
+function neuralOutput(f){
+
+    let score =
+        f.avg * weights.avg +
+        f.streak * weights.streak +
+        f.volatility * weights.volatility +
         bias;
 
-    return 1 / (1 + Math.exp(-sum)); // sigmoid
+    return sigmoid(score);
 }
 
 // =====================
@@ -176,18 +187,18 @@ function train(){
     if(history.length < 5) return;
 
     let data = analyze(history.slice(0,-1));
-    let target = history[history.length-1] === "T" ? 1 : 0;
+    let target = history[history.length-1] / 18; // normalize
 
     let out = neuralOutput(data.features);
 
     let error = target - out;
 
-    let lr = 0.05;
+    let lr = 0.01;
 
-    // update weights
+    weights.avg += lr * error * data.features.avg;
     weights.streak += lr * error * data.features.streak;
-    weights.balance += lr * error * data.features.balance;
-    weights.transition += lr * error * data.features.transition;
+    weights.volatility += lr * error * data.features.volatility;
+
     bias += lr * error;
 }
 
@@ -198,7 +209,7 @@ function predict(){
 
     if(history.length < 3){
         document.getElementById("result").innerText =
-        "Cần ít nhất 3 phiên";
+        "Cần ít nhất 3 số (3-18)";
         return;
     }
 
@@ -206,21 +217,22 @@ function predict(){
 
     let prob = neuralOutput(data.features);
 
-    let prediction = prob > 0.5 ? "TÀI (NN)" : "XỈU (NN)";
-
-    let confidence = Math.abs(prob - 0.5) * 200;
+    // map ra số 3-18
+    let predicted = Math.round(3 + prob * 15);
 
     document.getElementById("result").innerText = `
 📊 LỊCH SỬ: ${history.join(" ")}
 
-🤖 NEURAL NETWORK
-🎯 Dự đoán: ${prediction}
-📈 Xác suất Tài: ${(prob*100).toFixed(1)}%
+🤖 NEURAL AI (3-18)
+🎯 Dự đoán: ${predicted}
 
-🔥 Cầu: ${data.streakType} (${data.streak})
-📊 Tài: ${data.tai} | Xỉu: ${data.xiu}
+📈 Xác suất: ${(prob*100).toFixed(1)}%
 
-🧠 Confidence: ${confidence.toFixed(1)}%
+🔥 Chuỗi: ${data.streakValue} (${data.currentStreak})
+📊 Trung bình: ${data.avg.toFixed(2)}
+📉 Min/Max: ${data.min} / ${data.max}
+
+🔥 Vùng nóng: ${data.hotZone}
 `;
 }
 
