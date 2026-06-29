@@ -243,15 +243,20 @@ function predict(){
 
     let prob = neuralOutput(data.features);
 
-    // map về 3-18
-    let predicted = Math.round(3 + prob * 15);
+    // số dự đoán 3-18
+    let predictedNum = Math.round(3 + prob * 15);
+
+    // 👉 CHUYỂN SANG TÀI / XỈU
+    let predictedText = (predictedNum >= 11) ? "TÀI" : "XỈU";
 
     document.getElementById("result").innerText = `
 🎲 AI XÚC XẮC 3-18
 
 📊 Lịch sử: ${history.join(" ")}
 
-🎯 Dự đoán: ${predicted}
+🎯 Dự đoán số: ${predictedNum}
+🔥 Dự đoán: ${predictedText}
+
 📈 Xác suất: ${(prob*100).toFixed(2)}%
 
 🔥 Bệt: ${data.betType} (max ${data.longestStreak})
