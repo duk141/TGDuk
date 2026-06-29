@@ -84,6 +84,7 @@ let history = [];
 function add(n){
     history.push(n);
     train();
+    let target = (history[history.length-1] >= 11) ? 1 : 0;
     predict();
 }
 
@@ -166,10 +167,15 @@ function trainMarkov(){
 }
 
 function predictMarkov(){
+
     let key = getKey(history);
+
     if(!markov[key]) return 0.5;
 
-    return (markov[key].sum / markov[key].count)/18;
+    let avg = markov[key].sum / markov[key].count;
+
+    // normalize 3-18 → T/X
+    return (avg >= 11) ? 1 : 0;
 }
 
 // =====================
@@ -316,7 +322,7 @@ function train(){
     let mk = predictMarkov();
     let deep = mlp(d);
 
-    let final = (nn*0.3 + mk*0.3 + deep*0.4);
+    let final = (nn + mk + deep) / 3;
 
     let err = target - final;
 
@@ -350,7 +356,9 @@ function predict(){
     // smoothing
     final = final*0.7 + d.stability*0.3;
 
-    let predicted = Math.round(3 + final*15);
+   let predicted = (final > 0.5)
+    ? "TÀI"
+    : "XỈU";
 
     document.getElementById("result").innerText=`
 ⚡ VIP AI ULTIMATE SYSTEM
