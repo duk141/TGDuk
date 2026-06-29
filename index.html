@@ -381,6 +381,12 @@ ${heatmap(history)}
 `;
 }
 
+for(let i=3;i<=18;i++){
+    let btn = document.createElement("button");
+    btn.innerText = i;
+    btn.onclick = () => add(i);
+    document.getElementById("buttons").appendChild(btn);
+}
 </script>
 
 </body>
