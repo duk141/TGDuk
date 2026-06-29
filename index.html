@@ -62,10 +62,22 @@ button{
 let history = [];
 
 // =====================
-// ➕ THÊM KẾT QUẢ
+// 🧠 NEURAL WEIGHTS
+// =====================
+let weights = {
+    streak: Math.random(),
+    balance: Math.random(),
+    transition: Math.random()
+};
+
+let bias = Math.random();
+
+// =====================
+// ➕ ADD
 // =====================
 function add(v){
     history.push(v);
+    train();
     predict();
 }
 
@@ -78,130 +90,137 @@ function undo(){
 }
 
 // =====================
-// 🧠 AI ANALYZE
+// 🧠 ANALYZE
 // =====================
 function analyze(arr){
 
     let result = {
         tai:0,
         xiu:0,
-        currentStreak:0,
-        streakType:null,
-        longestStreak:0,
+        streak:0,
+        streakType:"",
+        longest:0,
         pattern:"",
-        strength:0,
-        alert:"",
+        score:0,
         prediction:""
     };
 
-    if(arr.length < 1) return result;
+    if(arr.length === 0) return result;
 
-    // 📊 ĐẾM
+    // 📊 đếm
     arr.forEach(v=>{
         if(v==="T") result.tai++;
         if(v==="X") result.xiu++;
     });
 
-    // 🔥 CHUỖI HIỆN TẠI
+    // 🔥 chuỗi hiện tại
     let last = arr[arr.length-1];
-    let count = 1;
+    let c=1;
 
     for(let i=arr.length-2;i>=0;i--){
-        if(arr[i]===last) count++;
+        if(arr[i]===last) c++;
         else break;
     }
 
-    result.currentStreak = count;
+    result.streak = c;
     result.streakType = last;
 
-    // 📈 CHUỖI DÀI NHẤT
-    let max=1,temp=1;
-
+    // 📈 longest
+    let m=1,t=1;
     for(let i=1;i<arr.length;i++){
         if(arr[i]===arr[i-1]){
-            temp++;
-            max=Math.max(max,temp);
-        }else temp=1;
+            t++;
+            m=Math.max(m,t);
+        }else t=1;
     }
 
-    result.longestStreak=max;
+    result.longest = m;
 
-    // 🤖 MARKOV SIMPLE
-    let trans={
-        T:{T:0,X:0},
-        X:{T:0,X:0}
-    };
+    // 🧠 feature score
+    let balance = Math.abs(result.tai - result.xiu) / (arr.length || 1);
 
-    for(let i=0;i<arr.length-1;i++){
-        trans[arr[i]][arr[i+1]]++;
-    }
-
-    let lastState = arr[arr.length-1];
-
-    let total = trans[lastState].T + trans[lastState].X;
-
-    let pT = total ? trans[lastState].T/total : 0.5;
-    let pX = total ? trans[lastState].X/total : 0.5;
-
-    result.prediction = pT > pX ? "TÀI (AI)" : "XỈU (AI)";
-
-    // 🧠 CẦU
-    let strength=0;
-
-    if(count>=4){
-        result.pattern="🔥 CẦU BỆT "+last;
-        strength+=count*15;
-    }
-
-    let xenKe=true;
+    let transition = 0;
     for(let i=1;i<arr.length;i++){
-        if(arr[i]===arr[i-1]) xenKe=false;
+        if(arr[i]!==arr[i-1]) transition++;
     }
+    transition = transition / (arr.length || 1);
 
-    if(xenKe) result.pattern="🔁 CẦU 1-1";
-
-    if(arr.length>=8){
-        let ok=true;
-        for(let i=0;i<4;i++){
-            if(arr[i]!==arr[i+4]) ok=false;
-        }
-        if(ok){
-            result.pattern="🔂 CẦU 2-2";
-            strength+=60;
-        }
-    }
-
-    strength+=Math.abs(result.tai-result.xiu)*5;
-
-    result.strength=strength;
-
-    // 🔔 CẢNH BÁO
-    if(strength>=80) result.alert="🔴 RẤT MẠNH";
-    else if(strength>=50) result.alert="🟠 MẠNH";
-    else if(strength>=30) result.alert="🟡 TB";
-    else result.alert="🟢 YẾU";
+    result.features = {
+        streak: result.streak / 10,
+        balance: balance,
+        transition: transition
+    };
 
     return result;
 }
 
 // =====================
-// 🎯 MAIN
+// 🤖 NEURAL PREDICT
+// =====================
+function neuralOutput(features){
+
+    let sum =
+        features.streak * weights.streak +
+        features.balance * weights.balance +
+        features.transition * weights.transition +
+        bias;
+
+    return 1 / (1 + Math.exp(-sum)); // sigmoid
+}
+
+// =====================
+// 🧠 TRAIN (SELF LEARN)
+// =====================
+function train(){
+
+    if(history.length < 5) return;
+
+    let data = analyze(history.slice(0,-1));
+    let target = history[history.length-1] === "T" ? 1 : 0;
+
+    let out = neuralOutput(data.features);
+
+    let error = target - out;
+
+    let lr = 0.05;
+
+    // update weights
+    weights.streak += lr * error * data.features.streak;
+    weights.balance += lr * error * data.features.balance;
+    weights.transition += lr * error * data.features.transition;
+    bias += lr * error;
+}
+
+// =====================
+// 🎯 PREDICT
 // =====================
 function predict(){
 
-    let s = analyze(history);
+    if(history.length < 3){
+        document.getElementById("result").innerText =
+        "Cần ít nhất 3 phiên";
+        return;
+    }
+
+    let data = analyze(history);
+
+    let prob = neuralOutput(data.features);
+
+    let prediction = prob > 0.5 ? "TÀI (NN)" : "XỈU (NN)";
+
+    let confidence = Math.abs(prob - 0.5) * 200;
 
     document.getElementById("result").innerText = `
 📊 LỊCH SỬ: ${history.join(" ")}
 
-🎯 DỰ ĐOÁN: ${s.prediction}
+🤖 NEURAL NETWORK
+🎯 Dự đoán: ${prediction}
+📈 Xác suất Tài: ${(prob*100).toFixed(1)}%
 
-🔥 CẦU: ${s.pattern}
-📈 ĐỘ MẠNH: ${s.strength}
-🔔 CẢNH BÁO: ${s.alert}
+🔥 Cầu: ${data.streakType} (${data.streak})
+📊 Tài: ${data.tai} | Xỉu: ${data.xiu}
 
-🔥 CHUỖI: ${s.currentStreak} (${s.streakType})
-📈 DÀI NHẤT: ${s.longestStreak}
+🧠 Confidence: ${confidence.toFixed(1)}%
 `;
 }
 
