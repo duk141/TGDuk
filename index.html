@@ -51,12 +51,143 @@ button{
 
 </div>
 
-<script>
+function analyze(arr) {
+
+    let result = {
+        tai: 0,
+        xiu: 0,
+        currentStreak: 0,
+        streakType: null,
+        longestStreak: 0,
+        pattern: "",
+        strength: 0,
+        alert: "",
+        prediction: ""
+    };
+
+    if (!arr || arr.length < 2) return result;
+
+    // ======================
+    // 📊 ĐẾM
+    // ======================
+    arr.forEach(v => {
+        if (v === "T") result.tai++;
+        if (v === "X") result.xiu++;
+    });
+
+    // ======================
+    // 🔥 CHUỖI HIỆN TẠI
+    // ======================
+    let last = arr[arr.length - 1];
+    let count = 1;
+
+    for (let i = arr.length - 2; i >= 0; i--) {
+        if (arr[i] === last) count++;
+        else break;
+    }
+
+    result.currentStreak = count;
+    result.streakType = last;
+
+    // ======================
+    // 📈 CHUỖI DÀI NHẤT
+    // ======================
+    let max = 1, temp = 1;
+
+    for (let i = 1; i < arr.length; i++) {
+        if (arr[i] === arr[i - 1]) {
+            temp++;
+            max = Math.max(max, temp);
+        } else temp = 1;
+    }
+
+    result.longestStreak = max;
+
+    // ======================
+    // 🤖 MACHINE LEARNING (MARKOV CHAIN)
+    // ======================
+    let trans = {
+        T: { T: 0, X: 0 },
+        X: { T: 0, X: 0 }
+    };
+
+    for (let i = 0; i < arr.length - 1; i++) {
+        let cur = arr[i];
+        let next = arr[i + 1];
+
+        if (trans[cur] && trans[cur][next] !== undefined) {
+            trans[cur][next]++;
+        }
+    }
+
+    // xác suất chuyển trạng thái
+    let lastState = arr[arr.length - 1];
+
+    let tTotal = trans[lastState].T + trans[lastState].X;
+
+    let pT = tTotal ? trans[lastState].T / tTotal : 0.5;
+    let pX = tTotal ? trans[lastState].X / tTotal : 0.5;
+
+    if (pT > pX) result.prediction = "TÀI (AI học chuyển trạng thái)";
+    else if (pX > pT) result.prediction = "XỈU (AI học chuyển trạng thái)";
+    else result.prediction = "KHÔNG RÕ (50/50)";
+
+    // ======================
+    // 🧠 CẦU NHẬN DIỆN NHANH
+    // ======================
+    if (count >= 4) {
+        result.pattern = "🔥 CẦU BỆT " + last;
+        result.strength += count * 15;
+    }
+
+    if (arr.length >= 4) {
+        let xenKe = true;
+        for (let i = 1; i < arr.length; i++) {
+            if (arr[i] === arr[i - 1]) {
+                xenKe = false;
+                break;
+            }
+        }
+        if (xenKe) result.pattern = "🔁 CẦU 1-1";
+    }
+
+    if (arr.length >= 8) {
+        let ok = true;
+        for (let i = 0; i < 4; i++) {
+            if (arr[i] !== arr[i + 4]) {
+                ok = false;
+                break;
+            }
+        }
+        if (ok) result.pattern = "🔂 CẦU 2-2";
+    }
+
+    // ======================
+    // 🔔 CẢNH BÁO
+    // ======================
+    let strength = result.strength;
+
+    strength += Math.abs(result.tai - result.xiu) * 5;
+
+    if (strength >= 80) result.alert = "🔴 CẦU RẤT MẠNH";
+    else if (strength >= 50) result.alert = "🟠 CẦU MẠNH";
+    else if (strength >= 30) result.alert = "🟡 CẦU TB";
+    else result.alert = "🟢 CẦU YẾU";
+
+    result.strength = strength;
+
+    return result;
+}
+
+
+// ======================
+// 🎯 MAIN
+// ======================
 function predict(){
 
     let input = document.getElementById("history").value.toUpperCase();
 
-    let arr = input.split(",").map(x=>x.trim());
+    let arr = input.split(",").map(x => x.trim()).filter(x => x);
 
     if(arr.length < 3){
         document.getElementById("result").innerHTML =
@@ -64,38 +195,22 @@ function predict(){
         return;
     }
 
-    let tai = 0;
-    let xiu = 0;
+    let s = analyze(arr);
 
-    arr.forEach(v=>{
-        if(v=="T") tai++;
-        if(v=="X") xiu++;
-    });
+    document.getElementById("result").innerHTML = `
+        🤖 <b>AI TỰ HỌC (MARKOV CHAIN)</b><br><br>
 
-    let last3 = arr.slice(-3);
+        🎯 Dự đoán: <b style="color:red">${s.prediction}</b><br><br>
 
-    let prediction = "";
+        📊 Tài: ${s.tai} | Xỉu: ${s.xiu}<br>
+        🔥 Cầu: ${s.pattern}<br>
+        📈 Độ mạnh: ${s.strength}<br>
+        🔔 Cảnh báo: ${s.alert}<br><br>
 
-    if(last3.every(v=>v=="T")){
-        prediction = "XỈU (do chuỗi Tài dài)";
-    }
-    else if(last3.every(v=>v=="X")){
-        prediction = "TÀI (do chuỗi Xỉu dài)";
-    }
-    else if(tai > xiu){
-        prediction = "TÀI";
-    }
-    else if(xiu > tai){
-        prediction = "XỈU";
-    }
-    else{
-        prediction = Math.random()>0.5 ? "TÀI" : "XỈU";
-    }
-
-    document.getElementById("result").innerHTML =
-    "Dự đoán phiên tiếp theo: <br><span style='color:red'>" + prediction + "</span>";
+        🔥 Chuỗi hiện tại: ${s.currentStreak} (${s.streakType})<br>
+        📈 Chuỗi dài nhất: ${s.longestStreak}<br>
+    `;
 }
-</script>
 
 </body>
 </html>
