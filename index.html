@@ -62,7 +62,7 @@ button{
 let history = [];
 
 // =====================
-// ➕ ADD NUMBER (3-18)
+// ➕ ADD
 // =====================
 function add(num){
     history.push(num);
@@ -87,35 +87,43 @@ function analyze(arr){
         avg:0,
         min:0,
         max:0,
-        longestStreak:0,
         currentStreak:0,
+        longestStreak:0,
         streakValue:0,
         hotZone:"",
+        betType:"NONE",
+        stability:0,
         features:{}
     };
 
     if(arr.length === 0) return result;
 
-    // 📊 avg
+    // =====================
+    // 📊 BASIC STATS
+    // =====================
     let sum = arr.reduce((a,b)=>a+b,0);
     result.avg = sum / arr.length;
 
     result.min = Math.min(...arr);
     result.max = Math.max(...arr);
 
-    // 🔥 current streak
-    let last = arr[arr.length-1];
-    let c=1;
+    // =====================
+    // 🔥 CURRENT STREAK
+    // =====================
+    let last = arr[arr.length - 1];
+    let c = 1;
 
     for(let i=arr.length-2;i>=0;i--){
-        if(arr[i]===last) c++;
+        if(arr[i] === last) c++;
         else break;
     }
 
     result.currentStreak = c;
     result.streakValue = last;
 
-    // 📈 longest streak
+    // =====================
+    // 📈 LONGEST STREAK
+    // =====================
     let m=1,t=1;
     for(let i=1;i<arr.length;i++){
         if(arr[i]===arr[i-1]){
@@ -126,7 +134,22 @@ function analyze(arr){
 
     result.longestStreak = m;
 
-    // 🔥 hot zone (range)
+    // =====================
+    // 🔥 DETECT "BỆT"
+    // =====================
+    if(m >= 4){
+        result.betType = "BỆT MẠNH";
+    }
+    else if(m === 3){
+        result.betType = "BỆT NHẸ";
+    }
+    else{
+        result.betType = "KHÔNG BỆT";
+    }
+
+    // =====================
+    // 📊 HOT ZONE
+    // =====================
     let low=0, mid=0, high=0;
 
     arr.forEach(v=>{
@@ -139,11 +162,28 @@ function analyze(arr){
     else if(mid>low && mid>high) result.hotZone="MID (10-13)";
     else result.hotZone="HIGH (14-18)";
 
-    // features for AI
+    // =====================
+    // 📉 STABILITY (KHÔNG NHẢY LUNG TUNG)
+    // =====================
+    let diff = 0;
+
+    for(let i=1;i<arr.length;i++){
+        diff += Math.abs(arr[i]-arr[i-1]);
+    }
+
+    let rawStability = 1 - (diff / (arr.length * 15));
+
+    // smoothing để không nhảy lung tung
+    result.stability = Math.max(0, Math.min(1, rawStability));
+
+    // =====================
+    // FEATURES FOR AI
+    // =====================
     result.features = {
         avg: result.avg/18,
         streak: result.currentStreak/10,
-        volatility: (result.max - result.min)/18
+        volatility: (result.max - result.min)/18,
+        stability: result.stability
     };
 
     return result;
@@ -155,18 +195,18 @@ function analyze(arr){
 let weights = {
     avg: Math.random(),
     streak: Math.random(),
-    volatility: Math.random()
+    volatility: Math.random(),
+    stability: Math.random()
 };
 
 let bias = Math.random();
 
-// sigmoid
 function sigmoid(x){
     return 1 / (1 + Math.exp(-x));
 }
 
 // =====================
-// 🧠 PREDICT NUMBER
+// 🧠 AI OUTPUT
 // =====================
 function neuralOutput(f){
 
@@ -174,30 +214,32 @@ function neuralOutput(f){
         f.avg * weights.avg +
         f.streak * weights.streak +
         f.volatility * weights.volatility +
+        f.stability * weights.stability +
         bias;
 
     return sigmoid(score);
 }
 
 // =====================
-// 🧠 TRAIN (SELF LEARN)
+// 🧠 TRAIN (SMOOTH LEARNING)
 // =====================
 function train(){
 
-    if(history.length < 5) return;
+    if(history.length < 6) return;
 
     let data = analyze(history.slice(0,-1));
-    let target = history[history.length-1] / 18; // normalize
+    let target = history[history.length-1] / 18;
 
     let out = neuralOutput(data.features);
 
     let error = target - out;
 
-    let lr = 0.01;
+    let lr = 0.005; // nhỏ hơn để ổn định
 
     weights.avg += lr * error * data.features.avg;
     weights.streak += lr * error * data.features.streak;
     weights.volatility += lr * error * data.features.volatility;
+    weights.stability += lr * error * data.features.stability;
 
     bias += lr * error;
 }
@@ -209,7 +251,7 @@ function predict(){
 
     if(history.length < 3){
         document.getElementById("result").innerText =
-        "Cần ít nhất 3 số (3-18)";
+        "Cần ít nhất 3 số";
         return;
     }
 
@@ -217,22 +259,25 @@ function predict(){
 
     let prob = neuralOutput(data.features);
 
-    // map ra số 3-18
-    let predicted = Math.round(3 + prob * 15);
+    // 📊 ổn định % (không nhảy lung tung)
+    let stableProb = prob * 0.7 + (data.stability * 0.3);
+
+    let predicted = Math.round(3 + stableProb * 15);
 
     document.getElementById("result").innerText = `
 📊 LỊCH SỬ: ${history.join(" ")}
 
-🤖 NEURAL AI (3-18)
+🤖 AI NEURAL (STABLE MODE)
+
 🎯 Dự đoán: ${predicted}
+📈 Xác suất ổn định: ${(stableProb*100).toFixed(2)}%
 
-📈 Xác suất: ${(prob*100).toFixed(1)}%
+🔥 Bệt: ${data.betType} (max streak: ${data.longestStreak})
+📊 Stability: ${(data.stability*100).toFixed(1)}%
 
-🔥 Chuỗi: ${data.streakValue} (${data.currentStreak})
-📊 Trung bình: ${data.avg.toFixed(2)}
-📉 Min/Max: ${data.min} / ${data.max}
+🔥 Chuỗi hiện tại: ${data.streakValue} (${data.currentStreak})
 
-🔥 Vùng nóng: ${data.hotZone}
+📊 Hot zone: ${data.hotZone}
 `;
 }
 
